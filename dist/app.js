@@ -7,7 +7,8 @@ const projects=[
 {id:'warm-minimalism',name:'The Warm Edit',location:'DHA, Lahore',type:'Interiors',image:'interior.jpg',area:'1 kanal',year:'2023',theme:'A softer kind of minimalism.',description:'Rich timber, tactile fabrics and subtle colour bring depth to a pared-back family interior. Comfort is designed into the details, from bespoke joinery to layered light.',materials:'Oak / Linen / Brushed brass'}
 ];
 const grid=document.querySelector('#project-grid');
-function renderProjects(){grid.innerHTML=projects.map((p,i)=>`<a class="project-card reveal" href="#project/${p.id}"><div class="project-image"><img src="/assets/${p.image}" alt="${p.name} — architectural inspiration" loading="lazy"><span class="project-number">0${i+1} / ${p.type.toUpperCase()}</span></div><div class="project-info"><div><h3>${p.name}</h3><p>${p.location}<span>·</span>${p.area}<span>·</span>${p.year}</p></div><span class="project-arrow" aria-hidden="true">↗</span></div></a>`).join('');observeReveals();}
+const pageTitle=document.title;
+function renderProjects(filter='All'){if(!grid)return;grid.innerHTML=projects.map((p,i)=>({p,i})).filter(({p})=>filter==='All'||p.type===filter).map(({p,i})=>`<a class="project-card reveal" href="#project/${p.id}"><div class="project-image"><img src="/assets/${p.image}" alt="${p.name} — architectural inspiration" loading="lazy"><span class="project-number">0${i+1} / ${p.type.toUpperCase()}</span></div><div class="project-info"><div><h3>${p.name}</h3><p>${p.location}<span>·</span>${p.area}<span>·</span>${p.year}</p></div><span class="project-arrow" aria-hidden="true">↗</span></div></a>`).join('');observeReveals();}
 const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');observer.unobserve(e.target)}}),{threshold:.12});
 function observeReveals(){document.querySelectorAll('.reveal').forEach(el=>observer.observe(el))}
 renderProjects();
@@ -69,7 +70,7 @@ function drawingSVG(sheet,project=projects[0],compact=false){
  }
  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 570" role="img" aria-label="${escapeXML(sheet.name)}, illustrative sample drawing"><rect width="800" height="570" fill="#e8eadd"/><rect x="20" y="20" width="760" height="530" fill="none" stroke="#aeb49e" stroke-width=".7"/>${text(400,46,'A R C H C E L L   /   T H E   D R A W I N G   R O O M',10)}${content}<g stroke="#9fa78e" stroke-width=".7">${line(20,500,780,500)}${line(570,500,570,550)}</g><text x="38" y="521" font-size="11" fill="#3f5036" font-family="Arial">${escapeXML(project.name.toUpperCase())} — ${escapeXML(sheet.name.toUpperCase())}</text><text x="38" y="539" font-size="9" fill="#727d62" font-family="Arial">DESIGN PREVIEW · ILLUSTRATIVE ONLY · NOT FOR CONSTRUCTION</text>${text(675,522,sheet.code,14,'#3f5036')}${text(675,539,'SAMPLE / NTS',9)}</svg>`;
 }
-document.querySelector('#plan-teaser').innerHTML=drawingSVG(sheets[0]);
+if(document.querySelector('#plan-teaser'))document.querySelector('#plan-teaser').innerHTML=drawingSVG(sheets[0]);
 let activeProject=projects[0],category='Architecture',currentSheet=0,zoom=1;
 const detail=document.querySelector('#project-view'),main=document.querySelector('#main-content'),transition=document.querySelector('.page-transition');
 function renderDetail(project){
@@ -86,7 +87,7 @@ async function route(animate=true){
  if(changePage&&animate&&!matchMedia('(prefers-reduced-motion: reduce)').matches){transition.classList.add('active');await new Promise(r=>setTimeout(r,420));}
  if(generation!==routeGeneration)return;
  if(isProject&&p){main.hidden=true;detail.hidden=false;document.body.classList.add('project-open');if(changePage||!detail.innerHTML)renderDetail(p);document.title=`${p.name} — Archcell`;if(parts[2]==='drawings'){document.querySelector('#project-catalogue').scrollIntoView({behavior:changePage?'instant':'smooth'})}else{window.scrollTo({top:0,behavior:'instant'});detail.querySelector('h1').focus({preventScroll:true})}}
- else{main.hidden=false;detail.hidden=true;document.body.classList.remove('project-open');document.title='Archcell — Spaces for the way you live.';const el=document.getElementById(hash.slice(1));if(el)el.scrollIntoView({behavior:wasProject?'instant':'smooth'});else window.scrollTo({top:0,behavior:'instant'});observeReveals();}
+ else{main.hidden=false;detail.hidden=true;document.body.classList.remove('project-open');document.title=pageTitle;const el=document.getElementById(hash.slice(1));if(el)el.scrollIntoView({behavior:wasProject?'instant':'smooth'});else window.scrollTo({top:0,behavior:'instant'});observeReveals();}
  requestAnimationFrame(()=>transition.classList.remove('active'));
 }
 window.addEventListener('hashchange',()=>route());
@@ -113,7 +114,7 @@ document.querySelector('#credits-list').innerHTML=credits.map(([name,where,url])
 // Fine-pointer interactions supplement the regular, keyboard-accessible links.
 const cursor=document.querySelector('.cursor-label');
 if(matchMedia('(hover: hover) and (pointer: fine)').matches){document.addEventListener('pointermove',e=>{cursor.style.left=e.clientX+'px';cursor.style.top=e.clientY+'px';cursor.classList.toggle('shown',!!e.target.closest('.project-image'))});document.addEventListener('pointerleave',()=>cursor.classList.remove('shown'));}
-let scrollTick=false;window.addEventListener('scroll',()=>{if(!scrollTick){requestAnimationFrame(()=>{if(!matchMedia('(prefers-reduced-motion: reduce)').matches&&detail.hidden){const heroImage=document.querySelector('.hero-image');const y=window.scrollY;if(y<window.innerHeight)heroImage.style.translate=`0 ${y*.16}px`;}scrollTick=false});scrollTick=true}},{passive:true});
+let scrollTick=false;window.addEventListener('scroll',()=>{if(!scrollTick){requestAnimationFrame(()=>{if(!matchMedia('(prefers-reduced-motion: reduce)').matches&&detail.hidden){const heroImage=document.querySelector('.hero-image');const y=window.scrollY;if(heroImage&&y<window.innerHeight)heroImage.style.translate=`0 ${y*.16}px`;}scrollTick=false});scrollTick=true}},{passive:true});
 observeReveals();
 mobileNav.addEventListener('keydown',e=>{if(e.key==='Tab'){const links=[...mobileNav.querySelectorAll('a')];if(!e.shiftKey&&document.activeElement===links.at(-1)){e.preventDefault();menuButton.focus()}}});
 menuButton.addEventListener('keydown',e=>{if(e.key==='Tab'&&menuButton.getAttribute('aria-expanded')==='true'){e.preventDefault();const links=mobileNav.querySelectorAll('a');links[e.shiftKey?links.length-1:0].focus()}});
