@@ -1,6 +1,7 @@
 # Archcell → Astro + Sanity + Cloudflare — Migration Plan
 
-> Status: **DRAFT — awaiting go-ahead**. Nothing is converted yet.
+> Status: **In progress — Phase 1 complete** (branch `astro-migration`, 2026-09-13).
+> Phase 2 (Sanity) and Phase 3 (Cloudflare) are next.
 > Decisions recorded 2026-09-13 from planning conversation.
 
 ## 1. Goal
@@ -234,19 +235,19 @@ by the pages that need them:
 ## 9. Phases & checklists
 
 ### Phase 0 — Prep (≈15 min)
-- [ ] Commit current working tree (`dist/app.js` edit; decide whether `audit/` screenshots are committed or ignored)
-- [ ] Create branch `astro-migration`; keep `main` untouched as fallback
+- [x] Commit current working tree (`dist/app.js` edit; decide whether `audit/` screenshots are committed or ignored)
+- [x] Create branch `astro-migration`; keep `main` untouched as fallback
 - [ ] Sanity account + project created (free): name “Archcell”, dataset `production`, public read; record `projectId`
 - [ ] Cloudflare account ready; GitHub repo access confirmed
 
-### Phase 1 — Astro scaffold + static port (no Sanity yet)
-- [ ] `package.json`, `astro.config.mjs` (static output, `site` from `SITE_URL`), `tsconfig`, updated `.gitignore`
-- [ ] `src/layouts/BaseLayout.astro` — head/SEO/canonical, fonts, header, footer, mobile nav, global dialogs, transition overlay
-- [ ] Port all routes with content from temporary local data modules that mirror the current arrays 1:1
-- [ ] New project routes `/projects/[slug]/` + `/projects/[slug]/drawings/`; all internal links rewritten; hash redirect added
-- [ ] CSS moved to `src/styles/` (selectors unchanged); JS split into `src/scripts/*`; SVG generator → `src/lib/drawings.ts`
-- [ ] **Verification:** every route renders pixel-comparable to today (screenshot pass vs `audit/screenshots/*-before.png`), form demo + viewer + filters + mobile menu all work, 404 works, redirects work
-- [ ] Delete `build-pages.mjs`, `pages/`, old `dist/`, `.openai/`
+### Phase 1 — Astro scaffold + static port (no Sanity yet) — **COMPLETE 2026-09-13**
+- [x] `package.json`, `astro.config.mjs` (static output, `site` from `SITE_URL`), `tsconfig`, updated `.gitignore`
+- [x] `src/layouts/BaseLayout.astro` — head/SEO/canonical, fonts, header, footer, mobile nav, global dialogs, transition overlay
+- [x] Port all routes with content from temporary local data modules that mirror the current arrays 1:1
+- [x] New project routes `/projects/[slug]/` + `/projects/[slug]/drawings/`; all internal links rewritten; hash redirect added
+- [x] CSS moved to `src/styles/` (selectors unchanged); JS split into `src/scripts/*`; SVG generator → `src/lib/drawings.ts`
+- [x] **Verification:** every route renders pixel-comparable to today (screenshot pass vs legacy build), form demo + viewer + filters + mobile menu all work, 404 works, redirects work
+- [x] Delete `build-pages.mjs`, `pages/`, old `dist/`, `.openai/`
 
 ### Phase 2 — Sanity content layer + Studio
 - [ ] Install `@sanity/astro`, `@sanity/client`, `sanity`, `@astrojs/react`, `@sanity/image-url` (+ README’s react peer deps)
