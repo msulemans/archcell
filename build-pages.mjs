@@ -10,7 +10,7 @@ const footer=`<footer class="site-footer section-pad"><div class="footer-top"><s
 let home=fs.readFileSync(path.join(dist,'index.html'),'utf8');
 home=home.replace(/<header class="site-header"[\s\S]*?<main id="main-content">/,header+'\n<main id="main-content">');
 home=home.replace(/<footer class="site-footer[\s\S]*?<\/footer>/,'');
-home=home.replace('</main>','</main>\n'+footer);
+home=home.replace('</body>',footer+'\n</body>');
 home=home.replace('href="#studio">Discover our approach','href="/process/">Discover our approach');
 if(!home.includes('href="/pages.css"'))home=home.replace('<link rel="stylesheet" href="/style.css" />','<link rel="stylesheet" href="/style.css" />\n<link rel="stylesheet" href="/pages.css" />');
 if(!home.includes('src="/pages.js"'))home=home.replace('<script src="/app.js" defer></script>','<script src="/app.js" defer></script>\n<script src="/pages.js" defer></script>');
