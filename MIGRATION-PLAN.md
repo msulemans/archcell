@@ -273,7 +273,9 @@ by the pages that need them:
 
 ### Phase 4 — “Everything editable” coverage — **in progress**
 - [x] Project types as Studio documents; collection filters derive from them
+- [x] Disciplines as Studio documents; catalogue filters, card grouping and ordering derive from them (add more freely)
 - [x] Per-project drawing collections — each project owns its sheet set; counts and disciplines derive from it
+- [x] Uploaded drawing images — a sheet can carry an exported image (JPG/PNG) that replaces the generated sample diagram in cards, viewer and download
 - [x] Per-project gallery images seeded and rendered on the story pages
 - [x] Site settings wired: contact details, contact note, studio statistics (homepage + studio page), footer
 - [x] Homepage copy and images wired to the `homePage` document

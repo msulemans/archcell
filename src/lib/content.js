@@ -153,9 +153,14 @@ export async function getProjectTypes() {
   );
 }
 
-// All drawing sheets. Each sheet carries the `project` it belongs to.
+// All drawing sheets. Each sheet carries the `project` it belongs to and the
+// `category` (discipline) title, plus an optional uploaded drawing image.
 export async function getSheets() {
-  return fetchOrFallback(drawingsQuery, (doc) => ({ ...doc }), () => localSheets.map((sheet) => ({ ...sheet })));
+  return fetchOrFallback(
+    drawingsQuery,
+    (doc) => ({ ...doc, image: imageUrl(doc.image, 1600) ?? null }),
+    () => localSheets.map((sheet) => ({ ...sheet })),
+  );
 }
 
 // The sheets for one project. While the dataset still holds the old shared

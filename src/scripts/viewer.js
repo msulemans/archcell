@@ -34,12 +34,26 @@ if (dialog && cards.length) {
     if (zoom === 1) { canvas.scrollTop = 0; canvas.scrollLeft = 0; }
   }
 
+  function artFor(card) {
+    return card.querySelector('.sheet-image svg, .sheet-image img');
+  }
+
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
   function updateSheet() {
     const card = cards.find((c) => Number(c.dataset.sheet) === currentSheet);
-    const svg = card.querySelector('.sheet-image svg');
+    const art = artFor(card);
     document.querySelector('#drawing-title').textContent = card.dataset.name;
     document.querySelector('#drawing-code').textContent = `${projectName} / ${card.dataset.code}`;
-    sheetEl.replaceChildren(svg.cloneNode(true));
+    document.querySelector('#download-label').textContent = art.tagName.toLowerCase() === 'img' ? 'Download image' : 'Download SVG';
+    sheetEl.replaceChildren(art.cloneNode(true));
     counter.textContent = `${String(currentSheet + 1).padStart(2, '0')} / ${cards.length}`;
     prevButton.disabled = currentSheet === 0;
     nextButton.disabled = currentSheet === cards.length - 1;
@@ -71,14 +85,17 @@ if (dialog && cards.length) {
 
   document.querySelector('#download-sheet').addEventListener('click', () => {
     const card = cards.find((c) => Number(c.dataset.sheet) === currentSheet);
-    const svg = card.querySelector('.sheet-image svg');
-    const blob = new Blob([svg.outerHTML], { type: 'image/svg+xml' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `archcell-${projectSlug}-${card.dataset.code}-SAMPLE.svg`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    const art = artFor(card);
+    const base = `archcell-${projectSlug}-${card.dataset.code}-SAMPLE`;
+    if (art.tagName.toLowerCase() === 'img') {
+      const ext = (art.src.split('?')[0].split('.').pop() || 'jpg').toLowerCase();
+      fetch(art.src)
+        .then((response) => response.blob())
+        .then((blob) => downloadBlob(blob, `${base}.${ext}`))
+        .catch(() => {});
+    } else {
+      downloadBlob(new Blob([art.outerHTML], { type: 'image/svg+xml' }), `${base}.svg`);
+    }
   });
 
   dialog.addEventListener('keydown', (e) => {

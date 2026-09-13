@@ -5,15 +5,17 @@
 //         to the Sanity CLI login token at ~/.config/sanity/config.json.
 //         Tokens never belong in the repo.
 //
-// The script is idempotent: documents use deterministic IDs (createOrReplace)
-// and images are only uploaded when an asset with the same filename is missing.
+// The script is idempotent AND editor-safe: documents use deterministic IDs with
+// createIfNotExists, and only link fields are patched on existing documents.
+// Studio edits (renames, uploaded drawing images, reordered rows) survive a re-run.
+// Images are only uploaded when an asset with the same filename is missing.
 
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createClient } from '@sanity/client';
-import { projects, sheets, credits } from '../src/lib/data.js';
+import { projects, sheets, cats, credits } from '../src/lib/data.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -61,7 +63,7 @@ const typeSlug = (name) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replac
 async function seedProjectTypes() {
   const names = [...new Set(projects.map((p) => p.type))];
   for (const [index, name] of names.entries()) {
-    await client.createOrReplace({
+    await client.createIfNotExists({
       _id: `projectType-${typeSlug(name)}`,
       _type: 'projectType',
       title: name,
@@ -69,6 +71,19 @@ async function seedProjectTypes() {
     });
   }
   console.log(`✓ ${names.length} project types`);
+}
+
+async function seedDisciplines() {
+  const names = cats.filter((name) => name !== 'All drawings');
+  for (const [index, name] of names.entries()) {
+    await client.createIfNotExists({
+      _id: `discipline-${typeSlug(name)}`,
+      _type: 'discipline',
+      title: name,
+      order: index + 1,
+    });
+  }
+  console.log(`✓ ${names.length} disciplines`);
 }
 
 async function seedProjects() {
@@ -79,9 +94,7 @@ async function seedProjects() {
     const galleryA = project.id === 'warm-minimalism' ? 'facade-detail.jpg' : 'interior.jpg';
     const galleryB = project.id === 'quiet-courtyard' ? 'residence.jpg' : 'courtyard.jpg';
     const galleryIds = [await uploadImage(galleryA), await uploadImage(galleryB)];
-    await client.createOrReplace({
-      _id: `project-${project.id}`,
-      _type: 'project',
+    const fields = {
       name: project.name,
       slug: { _type: 'slug', current: project.id },
       location: project.location,
@@ -95,7 +108,10 @@ async function seedProjects() {
       gallery: galleryIds.map((id) => ({ _type: 'image', asset: { _type: 'reference', _ref: id } })),
       featured: index === 0,
       order: index + 1,
-    });
+    };
+    await client.createIfNotExists({ _id: `project-${project.id}`, _type: 'project', ...fields });
+    // Keep the type link current without touching editor edits (images, copy).
+    await client.patch(`project-${project.id}`).set({ type: fields.type }).commit();
   }
   console.log(`✓ ${projects.length} projects`);
 }
@@ -108,23 +124,31 @@ async function seedDrawings() {
 
   // Every project keeps its own copy of the sample sheet set.
   for (const project of projects) {
-    await Promise.all(sheets.map((sheet, index) => client.createOrReplace({
-      _id: `drawing-${project.id}-${sheet.code.toLowerCase()}`,
-      _type: 'drawing',
-      project: { _type: 'reference', _ref: `project-${project.id}` },
-      code: sheet.code,
-      name: sheet.name,
-      category: sheet.category,
-      kind: sheet.kind,
-      order: index + 1,
-    })));
+    await Promise.all(sheets.map(async (sheet, index) => {
+      const fields = {
+        project: { _type: 'reference', _ref: `project-${project.id}` },
+        discipline: { _type: 'reference', _ref: `discipline-${typeSlug(sheet.category)}` },
+      };
+      // The full document is written once; afterwards only the links are
+      // patched, so uploaded drawing images and renames are preserved.
+      await client.createIfNotExists({
+        _id: `drawing-${project.id}-${sheet.code.toLowerCase()}`,
+        _type: 'drawing',
+        code: sheet.code,
+        name: sheet.name,
+        kind: sheet.kind,
+        order: index + 1,
+        ...fields,
+      });
+      await client.patch(`drawing-${project.id}-${sheet.code.toLowerCase()}`).set(fields).unset(['category']).commit();
+    }));
   }
   console.log(`✓ ${sheets.length} drawing sheets × ${projects.length} projects`);
 }
 
 async function seedCredits() {
   for (const [index, [name, usedFor, url]] of credits.entries()) {
-    await client.createOrReplace({
+    await client.createIfNotExists({
       _id: `credit-${index + 1}`,
       _type: 'credit',
       name,
@@ -137,7 +161,7 @@ async function seedCredits() {
 }
 
 async function seedSettings() {
-  await client.createOrReplace({
+  await client.createIfNotExists({
     _id: 'siteSettings',
     _type: 'siteSettings',
     contact: {
@@ -168,7 +192,7 @@ async function seedSettings() {
   const heroId = await uploadImage(projects[0].image);
   const interludeId = await uploadImage('interior.jpg');
   const studioId = await uploadImage('courtyard.jpg');
-  await client.createOrReplace({
+  await client.createIfNotExists({
     _id: 'homePage',
     _type: 'homePage',
     hero: {
@@ -237,7 +261,7 @@ const faqItems = [
 
 async function seedFaqs() {
   for (const [index, [page, question, answer]] of faqItems.entries()) {
-    await client.createOrReplace({
+    await client.createIfNotExists({
       _id: `faq-${page}-${index + 1}`,
       _type: 'faq',
       page,
@@ -251,6 +275,7 @@ async function seedFaqs() {
 
 console.log(`Seeding “${projectId}/${dataset}”…`);
 await seedProjectTypes();
+await seedDisciplines();
 await seedProjects();
 await seedDrawings();
 await seedCredits();

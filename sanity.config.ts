@@ -19,6 +19,7 @@ export default defineConfig({
             S.divider(),
             S.documentTypeListItem('project').title('Projects'),
             S.documentTypeListItem('projectType').title('Project types'),
+            S.documentTypeListItem('discipline').title('Disciplines'),
             S.documentTypeListItem('drawing').title('Drawing sheets'),
             S.documentTypeListItem('credit').title('Photography credits'),
             S.documentTypeListItem('faq').title('FAQs'),

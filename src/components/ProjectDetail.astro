@@ -4,7 +4,15 @@ import { drawingSVG } from '../lib/drawings.js';
 const { project, drawings = false, next = project, sheets = [] } = Astro.props;
 
 const catOrder = ['Architecture', 'Elevations', 'Structural', 'Electrical', 'Plumbing', 'Interiors'];
-const categories = catOrder.filter((c) => sheets.some((s) => s.category === c));
+const categoryEntries = [];
+for (const sheet of sheets) {
+  if (!categoryEntries.some((entry) => entry.title === sheet.category)) {
+    const fallback = catOrder.indexOf(sheet.category) + 1;
+    categoryEntries.push({ title: sheet.category, order: sheet.categoryOrder ?? (fallback > 0 ? fallback : 999) });
+  }
+}
+categoryEntries.sort((a, b) => a.order - b.order);
+const categories = categoryEntries.map((entry) => entry.title);
 const category = categories.includes('Architecture') ? 'Architecture' : categories[0] ?? 'All drawings';
 const catCount = (c) => (c === 'All drawings' ? sheets.length : sheets.filter((s) => s.category === c).length);
 const pairImageA = project.gallery?.[0] ?? `/assets/${project.id === 'warm-minimalism' ? 'facade-detail.jpg' : 'interior.jpg'}`;
@@ -51,12 +59,12 @@ const pairImageB = project.gallery?.[1] ?? `/assets/${project.id === 'quiet-cour
     <div class="sheet-grid" id="sheet-grid" aria-live="polite">
       {sheets.map((s, i) => (
         <button class="sheet-card" data-sheet={i} data-code={s.code} data-name={s.name} data-category={s.category} hidden={s.category !== category}>
-          <span class="sheet-image"><Fragment set:html={drawingSVG(s, project)} /><span class="open-sheet">View drawing ↗</span></span>
+          <span class="sheet-image">{s.image ? <img src={s.image} alt={`${s.name} — ${project.name}`} loading="lazy" /> : <Fragment set:html={drawingSVG(s, project)} />}<span class="open-sheet">View drawing ↗</span></span>
           <span class="sheet-meta"><span>{s.code}<strong>{s.name}</strong></span><span aria-hidden="true">↗</span></span>
         </button>
       ))}
     </div>
-    <p class="catalogue-note">SAMPLE COLLECTION / SVG FORMAT / NOT TO SCALE</p>
+    <p class="catalogue-note">SAMPLE COLLECTION / NOT TO SCALE</p>
   </section>
   <a class="next-project" href={`/projects/${next.id}/`} data-page-transition><img src={next.image} alt={next.name} loading="lazy" /><div><p class="eyebrow">NEXT PROJECT</p><h2>{next.name}</h2></div><span>↗</span></a>
   <div class="detail-footer"><a href="/">ARCHCELL</a><span>LAHORE, PAKISTAN</span><a href="/projects/">ALL PROJECTS ↗</a></div>

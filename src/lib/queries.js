@@ -19,11 +19,15 @@ export const projectTypesQuery = `*[_type == "projectType"] | order(order asc) {
   "title": title
 }`;
 
+// Sheets carry a `discipline` reference; the dereferenced title is aliased to
+// `category` for the site components (same shape as the local data fallback).
 export const drawingsQuery = `*[_type == "drawing"] | order(order asc) {
   code,
   name,
-  category,
+  "category": discipline->title,
+  "categoryOrder": discipline->order,
   kind,
+  image,
   "project": project->slug.current
 }`;
 
