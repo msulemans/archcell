@@ -1,7 +1,10 @@
 # Archcell → Astro + Sanity + Cloudflare — Migration Plan
 
-> Status: **In progress — Phase 1 complete** (branch `astro-migration`, 2026-09-13).
-> Phase 2 (Sanity) and Phase 3 (Cloudflare) are next.
+> Status: **Phase 1 complete; Phase 2 code-complete — waiting on the Sanity browser login**
+> (branch `astro-migration`). The site is live on Cloudflare at https://archcelldesign.com.
+> Resume point: complete the `npx sanity login` browser step, then create the project with
+> `npx sanity init --bare`, write the ID into `src/sanity/env.ts`, run `npm run seed`,
+> rebuild + redeploy, and add CORS origins for localhost + the production domain.
 > Decisions recorded 2026-09-13 from planning conversation.
 
 ## 1. Goal
@@ -249,21 +252,23 @@ by the pages that need them:
 - [x] **Verification:** every route renders pixel-comparable to today (screenshot pass vs legacy build), form demo + viewer + filters + mobile menu all work, 404 works, redirects work
 - [x] Delete `build-pages.mjs`, `pages/`, old `dist/`, `.openai/`
 
-### Phase 2 — Sanity content layer + Studio
-- [ ] Install `@sanity/astro`, `@sanity/client`, `sanity`, `@astrojs/react`, `@sanity/image-url` (+ README’s react peer deps)
-- [ ] `sanity.config.ts` (root) with schema types + structure tool; dashboard at `/admin`
-- [ ] Schemas: `project`, `drawing`, `credit`, `siteSettings`, `homePage` (+ validation, previews, helper text)
-- [ ] GROQ queries in `src/lib/queries.ts`; pages fetch at build time; guard for empty dataset
-- [ ] `scripts/seed.mjs` — uploads the six photographs, creates all documents from current data (run once: `npm run seed`)
-- [ ] Studio auth/CORS: add `http://localhost:4321` + production domain
+### Phase 2 — Sanity content layer + Studio — **code complete, awaiting project creation**
+- [x] Install `@sanity/astro`, `@sanity/client`, `sanity`, `@astrojs/react`, `@sanity/image-url` (+ README’s react peer deps)
+- [x] `sanity.config.ts` (root) with schema types + structure tool; dashboard at `/admin`
+- [x] Schemas: `project`, `drawing`, `credit`, `siteSettings`, `homePage` (+ validation, previews, helper text)
+- [x] GROQ queries in `src/lib/queries.ts`; pages fetch at build time; guard for empty dataset
+- [x] `scripts/seed.mjs` — uploads the six photographs, creates all documents from current data (run once: `npm run seed`)
+- [ ] **Create the Sanity project** — `npx sanity login` (browser step outstanding), then `npx sanity init --bare --project-name Archcell --dataset-default`; set the ID in `src/sanity/env.ts`
+- [ ] Run `npm run seed`; verify the fetched build renders identically to the fallback build
+- [ ] Studio auth/CORS: add `http://localhost:4321` + `https://archcelldesign.com`
 - [ ] **Verification:** Studio loads at `/admin` locally; editing a project and rebuilding changes the site; design still pixel-identical
 
-### Phase 3 — Cloudflare deploy
-- [ ] `wrangler.jsonc` + first `astro build` + `wrangler deploy` → workers.dev URL
-- [ ] Workers Builds: connect repo, set build/deploy commands + env vars, verify push-to-deploy
+### Phase 3 — Cloudflare deploy — **partially done early**
+- [x] `wrangler.jsonc` + first `astro build` + `wrangler deploy` (Workers static assets)
+- [x] Custom domains attached: `archcelldesign.com` + `www.archcelldesign.com`
+- [ ] Workers Builds CI/CD: connect the repo, set `SITE_URL`, build/deploy commands
 - [ ] Sanity webhook → build hook; verify publish → rebuild → live change
-- [ ] Update `SITE_URL` canonicals; optional custom domain; optional `@astrojs/sitemap` + `robots.txt`
-- [ ] **Verification:** production URL serves all routes, `/admin` works on production, 404 handling, redirects, OG tags
+- [ ] Optional `@astrojs/sitemap` + `robots.txt`
 
 ### Phase 4 — “Everything editable” coverage
 - [ ] 8 page-copy singletons + Portable Text rendering (`astro-portabletext`)

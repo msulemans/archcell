@@ -32,9 +32,15 @@ src/
     projects/[slug]/index.astro      Project story
     projects/[slug]/drawings.astro   Drawing catalogue (deep-links to the grid)
   lib/
-    data.js                    Projects, drawings, credits (Sanity replaces this)
+    data.js                    Fallback content + seed source for Sanity
+    content.js                 Content API: Sanity fetch with local fallback
+    queries.js                 GROQ queries
+    sanity.js                  Build-time Sanity client + image URLs
     drawings.js                Build-time SVG generator for the 18 sheets
     nav.js                     Current-section helper for navigation
+  sanity/
+    env.ts                     Public projectId/dataset (placeholder = not configured)
+    schemaTypes/               project, drawing, credit, siteSettings, homePage
   scripts/
     site.js                    Menu, reveals, dialogs, transition, parallax
     viewer.js                  Drawing viewer: open, zoom, next/prev, download
@@ -45,6 +51,21 @@ src/
     interior.css               Interior-page styles
 public/assets/                 Photography and logo (served at /assets/…)
 ```
+
+## Sanity (content dashboard)
+
+Content is fetched from Sanity **at build time**;
+`src/lib/content.js` falls back to the local data in `src/lib/data.js` when the project
+is not configured (or the dataset is empty/unreachable), so builds never break.
+
+- **Studio:** embedded at `/admin` (hash-routed, works with the static build).
+- **Config:** `src/sanity/env.ts` holds the public project ID + dataset. `PLACEHOLDER`
+  means “not set up yet” — flip it to the real ID to enable the Studio + fetching.
+- **Schemas:** `src/sanity/schemaTypes/` — projects, drawing sheets, photography credits,
+  site settings and homepage copy.
+- **Seeding:** `npm run seed` uploads the photographs from `public/assets/` and creates all
+  documents (idempotent). It uses `SANITY_API_WRITE_TOKEN` if present, otherwise the token
+  from `npx sanity login` (`~/.config/sanity/config.json`). Tokens never live in the repo.
 
 ## Commands
 
