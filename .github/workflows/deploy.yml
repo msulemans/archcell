@@ -1,0 +1,58 @@
+name: Deploy to Cloudflare
+
+# Production deploys run when:
+#  - a commit lands on main (code changes), or
+#  - Sanity fires the publish webhook (repository_dispatch: sanity-publish), or
+#  - someone clicks “Run workflow” in the Actions tab.
+#
+# Requires the CLOUDFLARE_API_TOKEN repository secret. Runs without it are
+# skipped, so the workflow never fails before the secret is configured.
+
+on:
+  push:
+    branches: [main]
+  repository_dispatch:
+    types: [sanity-publish]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      SITE_URL: https://archcelldesign.com
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - name: Check for deploy credentials
+        id: check
+        run: echo "configured=${{ env.CLOUDFLARE_API_TOKEN != '' }}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        if: steps.check.outputs.configured == 'true'
+
+      - uses: actions/setup-node@v4
+        if: steps.check.outputs.configured == 'true'
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        if: steps.check.outputs.configured == 'true'
+        run: npm ci
+
+      - name: Build
+        if: steps.check.outputs.configured == 'true'
+        run: npm run build
+
+      - name: Deploy
+        if: steps.check.outputs.configured == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Skipped (no credentials)
+        if: steps.check.outputs.configured != 'true'
+        run: echo "CLOUDFLARE_API_TOKEN secret is not set — skipping deploy."
