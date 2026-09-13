@@ -1,5 +1,7 @@
 ---
-import { credits } from '../lib/data.js';
+import { getCredits } from '../lib/content.js';
+
+const credits = await getCredits();
 ---
 <dialog id="credits-dialog" class="credits-dialog" aria-labelledby="credits-title">
   <button class="icon-button credits-close" aria-label="Close photography credits">×</button>

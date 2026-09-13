@@ -1,13 +1,17 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import ProjectDetail from '../../../components/ProjectDetail.astro';
-import { projects } from '../../../lib/data.js';
+import { getProjects, getNextProjectFrom } from '../../../lib/content.js';
 
-export function getStaticPaths() {
-  return projects.map((project) => ({ params: { slug: project.id }, props: { project } }));
+export async function getStaticPaths() {
+  const projects = await getProjects();
+  return projects.map((project) => ({
+    params: { slug: project.id },
+    props: { project, next: getNextProjectFrom(projects, project) },
+  }));
 }
 
-const { project } = Astro.props;
+const { project, next } = Astro.props;
 ---
 <BaseLayout
   title={`${project.name} — Drawings — Archcell`}
@@ -17,7 +21,7 @@ const { project } = Astro.props;
   projectSlug={project.id}
   projectName={project.name}
 >
-  <ProjectDetail project={project} drawings />
+  <ProjectDetail project={project} drawings next={next} />
 </BaseLayout>
 <script>
   // The drawings route deep-links to the catalogue section: align it below

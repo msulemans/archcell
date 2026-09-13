@@ -1,17 +1,16 @@
 ---
-import { cats, sheets, getNextProject } from '../lib/data.js';
+import { cats, sheets } from '../lib/data.js';
 import { drawingSVG } from '../lib/drawings.js';
 
-const { project, drawings = false } = Astro.props;
-const next = getNextProject(project);
+const { project, drawings = false, next = project } = Astro.props;
 const category = 'Architecture';
 const sheetCount = (c) => (c === 'All drawings' ? sheets.length : sheets.filter((s) => s.category === c).length);
-const pairImageA = project.id === 'warm-minimalism' ? 'facade-detail.jpg' : 'interior.jpg';
-const pairImageB = project.id === 'quiet-courtyard' ? 'residence.jpg' : 'courtyard.jpg';
+const pairImageA = project.gallery?.[0] ?? `/assets/${project.id === 'warm-minimalism' ? 'facade-detail.jpg' : 'interior.jpg'}`;
+const pairImageB = project.gallery?.[1] ?? `/assets/${project.id === 'quiet-courtyard' ? 'residence.jpg' : 'courtyard.jpg'}`;
 ---
 <article>
   <section class="project-hero">
-    <img src={`/assets/${project.image}`} alt={`${project.name} — reference photography`} />
+    <img src={project.image} alt={`${project.name} — reference photography`} />
     <div class="project-hero-shade"></div>
     <a class="project-back" href="/projects/#work">← Back to selected work</a>
     <div class="project-hero-title"><p class="eyebrow">{project.type.toUpperCase()} / CONCEPT SHOWCASE</p><h1 tabindex="-1">{project.name}</h1><p>{project.location}<span>·</span>{project.year}</p></div>
@@ -36,8 +35,8 @@ const pairImageB = project.id === 'quiet-courtyard' ? 'residence.jpg' : 'courtya
     </div>
   </section>
   <section class="detail-image-pair">
-    <img src={`/assets/${pairImageA}`} alt="Interior material and atmosphere reference" />
-    <div><img src={`/assets/${pairImageB}`} alt="Architectural light and space reference" loading="lazy" /><span>LIGHT, MATERIAL & THE SPACES BETWEEN.</span></div>
+    <img src={pairImageA} alt="Interior material and atmosphere reference" />
+    <div><img src={pairImageB} alt="Architectural light and space reference" loading="lazy" /><span>LIGHT, MATERIAL & THE SPACES BETWEEN.</span></div>
   </section>
   <section id="project-catalogue" class="catalogue section-pad">
     <div class="section-heading"><div><p class="eyebrow">FROM VISION TO DETAIL</p><h2 tabindex="-1">The complete <em>picture.</em></h2></div><div class="catalogue-count"><strong>18</strong><span>DRAWINGS<br>6 DISCIPLINES</span></div></div>
@@ -57,6 +56,6 @@ const pairImageB = project.id === 'quiet-courtyard' ? 'residence.jpg' : 'courtya
     </div>
     <p class="catalogue-note">SAMPLE COLLECTION / SVG FORMAT / NOT TO SCALE</p>
   </section>
-  <a class="next-project" href={`/projects/${next.id}/`} data-page-transition><img src={`/assets/${next.image}`} alt={next.name} loading="lazy" /><div><p class="eyebrow">NEXT PROJECT</p><h2>{next.name}</h2></div><span>↗</span></a>
+  <a class="next-project" href={`/projects/${next.id}/`} data-page-transition><img src={next.image} alt={next.name} loading="lazy" /><div><p class="eyebrow">NEXT PROJECT</p><h2>{next.name}</h2></div><span>↗</span></a>
   <div class="detail-footer"><a href="/">ARCHCELL</a><span>LAHORE, PAKISTAN</span><a href="/projects/">ALL PROJECTS ↗</a></div>
 </article>
