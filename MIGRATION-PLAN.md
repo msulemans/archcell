@@ -1,8 +1,9 @@
 # Archcell → Astro + Sanity + Cloudflare — Migration Plan
 
-> Status: **Phases 0–2 complete.** The site is live at https://archcelldesign.com with content
-> from Sanity (project `p8jvt4z4`) and the embedded Studio at https://archcelldesign.com/admin.
-> Next: Phase 3 — Workers Builds CI/CD + the Sanity publish webhook, then Phase 4 (page copy).
+> Status: **Phases 0–2 complete; main is the live source.** The site is live at
+> https://archcelldesign.com with content from Sanity (project `p8jvt4z4`) and the embedded
+> Studio at https://archcelldesign.com/admin. The deploy workflow is in place; two account
+> steps remain (see Phase 3) to make publishes rebuild the site automatically.
 > Decisions recorded 2026-09-13 from planning conversation.
 
 ## 1. Goal
@@ -261,11 +262,13 @@ by the pages that need them:
 - [x] Studio auth/CORS: `localhost:4321`, `localhost:5510`, `archcelldesign.com`, `www.archcelldesign.com` (credentials allowed)
 - [x] **Verification:** Studio boots at `/admin` and starts the email login; fetched build renders identically; deployed live
 
-### Phase 3 — Cloudflare deploy — **partially done early**
+### Phase 3 — Cloudflare deploy + auto-publish — **in progress**
 - [x] `wrangler.jsonc` + first `astro build` + `wrangler deploy` (Workers static assets)
 - [x] Custom domains attached: `archcelldesign.com` + `www.archcelldesign.com`
-- [ ] Workers Builds CI/CD: connect the repo, set `SITE_URL`, build/deploy commands
-- [ ] Sanity webhook → build hook; verify publish → rebuild → live change
+- [x] `main` fast-forwarded to the migrated site (default branch = live source)
+- [x] GitHub Actions deploy workflow (`.github/workflows/deploy.yml`): runs on push to main, Sanity dispatch (`sanity-publish`) or manual trigger; skips cleanly until the token exists
+- [ ] Add the `CLOUDFLARE_API_TOKEN` repository secret → deploys and the manual “Run workflow” button go live
+- [ ] Create the Sanity webhook → GitHub `repository_dispatch` (`sanity-publish`) → publishing rebuilds the site automatically
 - [ ] Optional `@astrojs/sitemap` + `robots.txt`
 
 ### Phase 4 — “Everything editable” coverage
