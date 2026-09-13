@@ -1,10 +1,12 @@
 ---
-import { cats, sheets } from '../lib/data.js';
 import { drawingSVG } from '../lib/drawings.js';
 
-const { project, drawings = false, next = project } = Astro.props;
-const category = 'Architecture';
-const sheetCount = (c) => (c === 'All drawings' ? sheets.length : sheets.filter((s) => s.category === c).length);
+const { project, drawings = false, next = project, sheets = [] } = Astro.props;
+
+const catOrder = ['Architecture', 'Elevations', 'Structural', 'Electrical', 'Plumbing', 'Interiors'];
+const categories = catOrder.filter((c) => sheets.some((s) => s.category === c));
+const category = categories.includes('Architecture') ? 'Architecture' : categories[0] ?? 'All drawings';
+const catCount = (c) => (c === 'All drawings' ? sheets.length : sheets.filter((s) => s.category === c).length);
 const pairImageA = project.gallery?.[0] ?? `/assets/${project.id === 'warm-minimalism' ? 'facade-detail.jpg' : 'interior.jpg'}`;
 const pairImageB = project.gallery?.[1] ?? `/assets/${project.id === 'quiet-courtyard' ? 'residence.jpg' : 'courtyard.jpg'}`;
 ---
@@ -18,7 +20,7 @@ const pairImageB = project.gallery?.[1] ?? `/assets/${project.id === 'quiet-cour
   </section>
   <nav class="project-subnav" aria-label="Project sections">
     <a href={`/projects/${project.id}/`} data-page-transition>The story</a>
-    <a href={`/projects/${project.id}/drawings/`} data-page-transition aria-current={drawings ? 'location' : undefined}>Drawing catalogue <span>18</span></a>
+    <a href={`/projects/${project.id}/drawings/`} data-page-transition aria-current={drawings ? 'location' : undefined}>Drawing catalogue <span>{sheets.length}</span></a>
     <span>{project.area} / {project.type}</span>
   </nav>
   <section class="project-story section-pad">
@@ -39,11 +41,11 @@ const pairImageB = project.gallery?.[1] ?? `/assets/${project.id === 'quiet-cour
     <div><img src={pairImageB} alt="Architectural light and space reference" loading="lazy" /><span>LIGHT, MATERIAL & THE SPACES BETWEEN.</span></div>
   </section>
   <section id="project-catalogue" class="catalogue section-pad">
-    <div class="section-heading"><div><p class="eyebrow">FROM VISION TO DETAIL</p><h2 tabindex="-1">The complete <em>picture.</em></h2></div><div class="catalogue-count"><strong>18</strong><span>DRAWINGS<br>6 DISCIPLINES</span></div></div>
+    <div class="section-heading"><div><p class="eyebrow">FROM VISION TO DETAIL</p><h2 tabindex="-1">The complete <em>picture.</em></h2></div><div class="catalogue-count"><strong>{sheets.length}</strong><span>DRAWINGS<br>{categories.length} DISCIPLINES</span></div></div>
     <p class="catalogue-intro">Explore each discipline, open a sheet, and look closer. These sample diagrams demonstrate the project library; they are not construction documents.</p>
     <div class="catalogue-filters" aria-label="Filter drawings by discipline">
-      {cats.map((c) => (
-        <button data-category={c} aria-pressed={String(c === category)}>{c}<span>{sheetCount(c)}</span></button>
+      {['All drawings', ...categories].map((c) => (
+        <button data-category={c} aria-pressed={String(c === category)}>{c}<span>{catCount(c)}</span></button>
       ))}
     </div>
     <div class="sheet-grid" id="sheet-grid" aria-live="polite">

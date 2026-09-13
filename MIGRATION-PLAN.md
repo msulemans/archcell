@@ -1,9 +1,9 @@
 # Archcell → Astro + Sanity + Cloudflare — Migration Plan
 
-> Status: **Phases 0–2 complete; main is the live source.** The site is live at
-> https://archcelldesign.com with content from Sanity (project `p8jvt4z4`) and the embedded
-> Studio at https://archcelldesign.com/admin. The deploy workflow is in place; two account
-> steps remain (see Phase 3) to make publishes rebuild the site automatically.
+> Status: **Phases 0–2 complete; main is the live source.** Projects (with types, galleries and
+> per-project drawing collections), site settings, FAQs and the homepage are all editable from
+> the Studio at https://archcelldesign.com/admin. Remaining: the rest of the static page copy
+> (Phase 4) and the two account steps in Phase 3 to make publishes rebuild automatically.
 > Decisions recorded 2026-09-13 from planning conversation.
 
 ## 1. Goal
@@ -271,10 +271,15 @@ by the pages that need them:
 - [ ] Create the Sanity webhook → GitHub `repository_dispatch` (`sanity-publish`) → publishing rebuilds the site automatically
 - [ ] Optional `@astrojs/sitemap` + `robots.txt`
 
-### Phase 4 — “Everything editable” coverage
-- [ ] 8 page-copy singletons + Portable Text rendering (`astro-portabletext`)
-- [ ] Wire every page to Sanity copy; keep markup/classes identical
-- [ ] **Verification:** change text on each page in Studio → rebuild → confirm on site
+### Phase 4 — “Everything editable” coverage — **in progress**
+- [x] Project types as Studio documents; collection filters derive from them
+- [x] Per-project drawing collections — each project owns its sheet set; counts and disciplines derive from it
+- [x] Per-project gallery images seeded and rendered on the story pages
+- [x] Site settings wired: contact details, contact note, studio statistics (homepage + studio page), footer
+- [x] Homepage copy and images wired to the `homePage` document
+- [x] FAQs (contact + process) as Studio documents
+- [ ] Remaining page copy: services / studio / drawings / privacy / 404 headings and paragraphs
+- [ ] Optional richer text: Portable Text for long-form paragraphs
 
 ### Phase 5 — Polish (optional, later)
 - [ ] Draft previews / Visual Editing (requires switching to server output + `@astrojs/cloudflare` + `nodejs_compat`)

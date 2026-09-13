@@ -15,6 +15,7 @@ export const siteSettings = defineType({
         defineField({ name: 'whatsapp', title: 'WhatsApp', type: 'string' }),
         defineField({ name: 'address', title: 'Studio address', type: 'string' }),
         defineField({ name: 'addressNote', title: 'Address note', type: 'string' }),
+        defineField({ name: 'demoNote', title: 'Contact note', type: 'string', description: 'The small print under the contact details.' }),
       ],
     }),
     defineField({
@@ -29,6 +30,8 @@ export const siteSettings = defineType({
         defineField({ name: 'projectsValue', title: 'Projects value', type: 'string', description: 'e.g. “100”' }),
         defineField({ name: 'projectsSuffix', title: 'Projects suffix', type: 'string', description: 'e.g. “s”' }),
         defineField({ name: 'projectsLabel', title: 'Projects label', type: 'string', description: 'e.g. “Projects, each personal”' }),
+        defineField({ name: 'homeValue', title: 'Home value', type: 'string', description: 'e.g. “LHR”' }),
+        defineField({ name: 'homeLabel', title: 'Home label', type: 'string', description: 'e.g. “Our home, our perspective”' }),
       ],
     }),
     defineField({

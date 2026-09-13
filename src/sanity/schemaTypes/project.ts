@@ -18,9 +18,9 @@ export const project = defineType({
     defineField({
       name: 'type',
       title: 'Type',
-      type: 'string',
-      options: { list: ['Residential', 'Interiors'], layout: 'radio' },
-      initialValue: 'Residential',
+      type: 'reference',
+      to: [{ type: 'projectType' }],
+      description: 'Manage the list of types under “Project types” in the sidebar — new types appear in the collection filters automatically.',
       validation: (r) => r.required(),
     }),
     defineField({ name: 'area', title: 'Plot / covered area', type: 'string' }),

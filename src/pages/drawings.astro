@@ -1,16 +1,18 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { getProjects, getSheets } from '../lib/content.js';
+import { getProjects, getSheets, sheetsForProject } from '../lib/content.js';
 
 const projects = await getProjects();
 const sheets = await getSheets();
+const counts = projects.map((p) => sheetsForProject(sheets, p.id).length);
+const uniform = counts.length > 0 && counts.every((c) => c === counts[0]);
 ---
 <BaseLayout
   title="The Drawing Room — Archcell"
   description="Browse project collections of plans, elevations, structural, electrical, plumbing and interior drawings."
   interior
 >
-  <section class="page-heading section-pad"><div class="page-kicker"><span class="eyebrow">THE DRAWING ROOM</span><span>THE ARCHITECTURE BEHIND THE IMAGE</span></div><h1>Every line.<br><em>Part of the story.</em></h1><div class="page-heading-bottom"><p>Plans, elevations and the systems within.<br>A complete collection, organised project by project.</p><div class="catalogue-count"><strong>{projects.length}</strong><span>PROJECTS<br>{sheets.length} SAMPLE SHEETS EACH</span></div></div></section>
+  <section class="page-heading section-pad"><div class="page-kicker"><span class="eyebrow">THE DRAWING ROOM</span><span>THE ARCHITECTURE BEHIND THE IMAGE</span></div><h1>Every line.<br><em>Part of the story.</em></h1><div class="page-heading-bottom"><p>Plans, elevations and the systems within.<br>A complete collection, organised project by project.</p><div class="catalogue-count"><strong>{projects.length}</strong><span>PROJECTS<br>{uniform ? `${counts[0]} SAMPLE SHEETS EACH` : `${sheets.length} SAMPLE SHEETS`}</span></div></div></section>
   <section class="archive-intro section-pad"><p>Choose a project below to browse its architectural, structural, electrical, plumbing and interior drawing collection.</p><span class="sample-stamp">ILLUSTRATIVE DIAGRAMS<br>NOT FOR CONSTRUCTION</span></section>
   <section class="archive-list section-pad" id="archive-list" aria-label="Project drawing collections">
     {projects.map((p, i) => (
@@ -18,7 +20,7 @@ const sheets = await getSheets();
         <span class="archive-number">{String(i + 1).padStart(2, '0')}</span>
         <img src={`/assets/${p.image}`} alt={`${p.name} — reference image`} loading="lazy" />
         <div><span class="eyebrow">{p.location.toUpperCase()}</span><h2>{p.name}</h2><p>Architecture · Elevations · Structure<br>Electrical · Plumbing · Interiors</p></div>
-        <span class="archive-total">{sheets.length}<small>DRAWINGS</small></span>
+        <span class="archive-total">{sheetsForProject(sheets, p.id).length}<small>DRAWINGS</small></span>
         <span class="archive-arrow">↗</span>
       </a>
     ))}

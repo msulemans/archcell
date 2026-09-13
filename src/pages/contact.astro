@@ -1,5 +1,10 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { getSiteSettings, getFaqs } from '../lib/content.js';
+
+const settings = await getSiteSettings();
+const contact = settings.contact ?? {};
+const faqs = await getFaqs('contact');
 ---
 <BaseLayout
   title="Start Your Project — Archcell"
@@ -8,7 +13,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 >
   <section class="page-heading contact-heading section-pad"><div class="page-kicker"><span class="eyebrow">START A CONVERSATION</span><span>YOUR NEXT CHAPTER</span></div><h1>It begins with<br><em>your idea.</em></h1><div class="page-heading-bottom"><p>A new home, a room reimagined, a first possibility.<br>Tell us what you have in mind.</p><a href="#project-brief" class="text-link">Write your brief <span>↓</span></a></div></section>
   <section class="contact-layout section-pad">
-    <aside class="contact-aside"><div class="contact-photo"><img src="/assets/hero-night.jpg" alt="Warm illuminated entrance to a contemporary home"></div><p class="eyebrow">ARCHCELL / LAHORE</p><h2>Good spaces start<br>with a <em>conversation.</em></h2><dl><div><dt>EMAIL / DEMO</dt><dd>hello@archcell.example</dd></div><div><dt>WHATSAPP / DEMO</dt><dd>+92 3XX XXX XXXX</dd></div><div><dt>STUDIO</dt><dd>Lahore, Pakistan<br><small>Detailed address to follow.</small></dd></div></dl><p class="contact-demo-note">Contact details are placeholders. This preview does not send messages or book appointments.</p><a href="/process/" class="text-link">What happens next <span>↗</span></a></aside>
+    <aside class="contact-aside"><div class="contact-photo"><img src="/assets/hero-night.jpg" alt="Warm illuminated entrance to a contemporary home"></div><p class="eyebrow">ARCHCELL / LAHORE</p><h2>Good spaces start<br>with a <em>conversation.</em></h2><dl><div><dt>EMAIL / DEMO</dt><dd>{contact.email}</dd></div><div><dt>WHATSAPP / DEMO</dt><dd>{contact.whatsapp}</dd></div><div><dt>STUDIO</dt><dd>{contact.address}<br><small>{contact.addressNote}</small></dd></div></dl><p class="contact-demo-note">{contact.demoNote}</p><a href="/process/" class="text-link">What happens next <span>↗</span></a></aside>
     <div class="enquiry-panel" id="project-brief">
       <div id="enquiry-form-wrap">
         <div class="enquiry-top"><span class="eyebrow">YOUR PROJECT BRIEF</span><button type="button" id="fill-demo">Try a sample brief ↗</button></div>
@@ -49,5 +54,5 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <section id="enquiry-result" hidden aria-labelledby="enquiry-result-title"><span class="eyebrow">DEMO BRIEF PREPARED</span><h2 id="enquiry-result-title" tabindex="-1">Your project.<br><em>On one page.</em></h2><p class="result-notice">This is a preview. No enquiry has been sent. Download your brief to keep it, or return to make changes.</p><dl id="enquiry-summary"></dl><div class="result-actions"><button class="solid-button" id="download-brief">Download my brief <span>↓</span></button><button class="back-button" id="edit-brief">Edit details</button></div><button class="new-brief" id="new-brief">Start a new brief ↗</button></section>
     </div>
   </section>
-  <section class="faq-section section-pad"><div><p class="eyebrow">A FEW FIRST ANSWERS</p><h2>Before<br><em>hello.</em></h2></div><div class="faq-list"><details><summary>Do I need a finished brief before getting in touch?<span>+</span></summary><p>No. A location, an approximate plot size and a sense of what you want to create are enough to begin shaping a conversation.</p></details><details><summary>Can I enquire about a project outside Lahore?<span>+</span></summary><p>Include the project location in your brief. Availability, travel and the appropriate project scope would need to be agreed with the studio.</p></details><details><summary>Does this form send my enquiry?<span>+</span></summary><p>Not yet. This is a demonstration of the enquiry experience. It prepares a brief in your browser that you can download. No message is sent, no appointment is booked, and no response is scheduled.</p></details></div></section>
+  <section class="faq-section section-pad"><div><p class="eyebrow">A FEW FIRST ANSWERS</p><h2>Before<br><em>hello.</em></h2></div><div class="faq-list">{faqs.map((item) => <details><summary>{item.question}<span>+</span></summary><p>{item.answer}</p></details>)}</div></section>
 </BaseLayout>

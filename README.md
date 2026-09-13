@@ -61,8 +61,8 @@ is not configured (or the dataset is empty/unreachable), so builds never break.
 - **Studio:** embedded at `/admin` (hash-routed, works with the static build).
 - **Config:** `src/sanity/env.ts` holds the public project ID + dataset. `PLACEHOLDER`
   means “not set up yet” — flip it to the real ID to enable the Studio + fetching.
-- **Schemas:** `src/sanity/schemaTypes/` — projects, drawing sheets, photography credits,
-  site settings and homepage copy.
+- **Schemas:** `src/sanity/schemaTypes/` — projects, project types, drawing sheets
+  (per-project collections), photography credits, FAQs, site settings and homepage copy.
 - **Seeding:** `npm run seed` uploads the photographs from `public/assets/` and creates all
   documents (idempotent). It uses `SANITY_API_WRITE_TOKEN` if present, otherwise the token
   from `npx sanity login` (`~/.config/sanity/config.json`). Tokens never live in the repo.

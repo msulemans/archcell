@@ -28,6 +28,7 @@ export const drawing = defineType({
   title: 'Drawing sheet',
   type: 'document',
   fields: [
+    defineField({ name: 'project', title: 'Project', type: 'reference', to: [{ type: 'project' }], description: 'The project this sheet belongs to. Each project keeps its own drawing collection.', validation: (r) => r.required() }),
     defineField({ name: 'code', title: 'Sheet code', type: 'string', validation: (r) => r.required() }),
     defineField({ name: 'name', title: 'Sheet name', type: 'string', validation: (r) => r.required() }),
     defineField({

@@ -1,7 +1,10 @@
 ---
 import { isCurrent } from '../lib/nav.js';
+import { getSiteSettings, textWithBreaks } from '../lib/content.js';
 
 const path = Astro.url.pathname;
+const settings = await getSiteSettings();
+const footer = settings.footer ?? {};
 const nav = [
   ['/projects/', 'Selected work'],
   ['/studio/', 'The studio'],
@@ -16,6 +19,6 @@ const nav = [
   <nav class="footer-navigation" aria-label="Footer navigation">
     {nav.map(([href, label]) => <a href={href} aria-current={isCurrent(path, href) ? 'page' : undefined}>{label}</a>)}
   </nav>
-  <div class="footer-bottom"><p>Architecture & interiors.<br>Thoughtfully, from the ground up.</p><a href="#" class="back-top">BACK TO TOP ↑</a></div>
-  <div class="footer-fine"><span>© 2026 Archcell</span><span>Design preview. Illustrative projects and drawings; not for construction.</span><a href="/privacy/">About this preview</a><button id="credits-button">Photography credits ↗</button></div>
+  <div class="footer-bottom"><p set:html={textWithBreaks(footer.statement)}></p><a href="#" class="back-top">BACK TO TOP ↑</a></div>
+  <div class="footer-fine"><span>{footer.copyright}</span><span>{footer.finePrint}</span><a href="/privacy/">About this preview</a><button id="credits-button">Photography credits ↗</button></div>
 </footer>

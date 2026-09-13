@@ -56,22 +56,43 @@ async function uploadImage(filename) {
   return asset._id;
 }
 
+const typeSlug = (name) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+async function seedProjectTypes() {
+  const names = [...new Set(projects.map((p) => p.type))];
+  for (const [index, name] of names.entries()) {
+    await client.createOrReplace({
+      _id: `projectType-${typeSlug(name)}`,
+      _type: 'projectType',
+      title: name,
+      order: index + 1,
+    });
+  }
+  console.log(`✓ ${names.length} project types`);
+}
+
 async function seedProjects() {
   for (const [index, project] of projects.entries()) {
     const imageId = await uploadImage(project.image);
+    // The story-page image pair matches the original site: each project gets
+    // its own gallery images (editable per project in the Studio).
+    const galleryA = project.id === 'warm-minimalism' ? 'facade-detail.jpg' : 'interior.jpg';
+    const galleryB = project.id === 'quiet-courtyard' ? 'residence.jpg' : 'courtyard.jpg';
+    const galleryIds = [await uploadImage(galleryA), await uploadImage(galleryB)];
     await client.createOrReplace({
       _id: `project-${project.id}`,
       _type: 'project',
       name: project.name,
       slug: { _type: 'slug', current: project.id },
       location: project.location,
-      type: project.type,
+      type: { _type: 'reference', _ref: `projectType-${typeSlug(project.type)}` },
       area: project.area,
       year: project.year,
       theme: project.theme,
       description: project.description,
       materials: project.materials,
       image: { _type: 'image', asset: { _type: 'reference', _ref: imageId } },
+      gallery: galleryIds.map((id) => ({ _type: 'image', asset: { _type: 'reference', _ref: id } })),
       featured: index === 0,
       order: index + 1,
     });
@@ -80,18 +101,25 @@ async function seedProjects() {
 }
 
 async function seedDrawings() {
-  for (const [index, sheet] of sheets.entries()) {
-    await client.createOrReplace({
-      _id: `drawing-${sheet.code.toLowerCase()}`,
+  // Remove the old shared sheet list (pre per-project collections).
+  const legacyIds = await client.fetch(`*[_type == "drawing" && !defined(project)]._id`);
+  for (const id of legacyIds) await client.delete(id);
+  if (legacyIds.length) console.log(`  removed ${legacyIds.length} legacy unlinked sheets`);
+
+  // Every project keeps its own copy of the sample sheet set.
+  for (const project of projects) {
+    await Promise.all(sheets.map((sheet, index) => client.createOrReplace({
+      _id: `drawing-${project.id}-${sheet.code.toLowerCase()}`,
       _type: 'drawing',
+      project: { _type: 'reference', _ref: `project-${project.id}` },
       code: sheet.code,
       name: sheet.name,
       category: sheet.category,
       kind: sheet.kind,
       order: index + 1,
-    });
+    })));
   }
-  console.log(`✓ ${sheets.length} drawing sheets`);
+  console.log(`✓ ${sheets.length} drawing sheets × ${projects.length} projects`);
 }
 
 async function seedCredits() {
@@ -117,6 +145,7 @@ async function seedSettings() {
       whatsapp: '+92 3XX XXX XXXX',
       address: 'Lahore, Pakistan',
       addressNote: 'Detailed address to follow.',
+      demoNote: 'Contact details are placeholders. This preview does not send messages or book appointments.',
     },
     stats: {
       yearsValue: '10',
@@ -125,9 +154,11 @@ async function seedSettings() {
       projectsValue: '100',
       projectsSuffix: 's',
       projectsLabel: 'Projects, each personal',
+      homeValue: 'LHR',
+      homeLabel: 'Our home, our perspective',
     },
     footer: {
-      statement: 'Architecture & interiors. Thoughtfully, from the ground up.',
+      statement: 'Architecture & interiors.\nThoughtfully, from the ground up.',
       finePrint: 'Design preview. Illustrative projects and drawings; not for construction.',
       copyright: '© 2026 Archcell',
     },
@@ -135,14 +166,17 @@ async function seedSettings() {
   });
 
   const heroId = await uploadImage(projects[0].image);
+  const interludeId = await uploadImage('interior.jpg');
+  const studioId = await uploadImage('courtyard.jpg');
   await client.createOrReplace({
     _id: 'homePage',
     _type: 'homePage',
     hero: {
       eyebrow: 'ARCHITECTURE, ROOTED IN LIFE',
       titleTop: 'Spaces for',
+      titleLine2: 'the way you',
       titleEm: 'live.',
-      paragraph: 'From the first line to the final detail. Homes imagined around you.',
+      paragraph: 'From the first line to the final detail.\nHomes imagined around you.',
       toplineLeft: 'CONSIDERED ARCHITECTURE. PERSONAL SPACES.',
       toplineRight: '31.5204° N   74.3587° E',
       footerLeft: 'BASED IN LAHORE. BUILT AROUND YOU.',
@@ -151,7 +185,8 @@ async function seedSettings() {
     intro: {
       eyebrow: '01 / A WAY OF SEEING',
       heading: 'Good architecture is seen.',
-      headingSpan: 'Great architecture is felt.',
+      headingSpan: 'Great architecture is',
+      headingEm: 'felt.',
       paragraph: 'Light that falls just right. Rooms that bring people together. A home that feels unmistakably yours. This is where our work begins.',
       linkLabel: 'Discover our approach',
     },
@@ -159,7 +194,7 @@ async function seedSettings() {
       eyebrow: '02 / SELECTED WORK',
       heading: 'A sense of',
       headingEm: 'place.',
-      aside: 'Individual homes. A shared attention to detail.',
+      aside: 'Individual homes.\nA shared attention to detail.',
       noteLabel: 'A PREVIEW OF POSSIBILITIES',
       noteText: 'Sample projects & reference photography. The Archcell portfolio is coming into focus.',
     },
@@ -168,6 +203,7 @@ async function seedSettings() {
       heading: 'The art of',
       headingEm: 'coming home.',
       label: 'MATERIAL. LIGHT. LIFE.',
+      image: { _type: 'image', asset: { _type: 'reference', _ref: interludeId } },
     },
     drawingRoom: {
       eyebrow: '03 / THE DRAWING ROOM',
@@ -183,14 +219,41 @@ async function seedSettings() {
       headingEm: 'Lasting spaces.',
       paragraphOne: 'Archcell is a Lahore-based architecture and interior design practice, shaped by a decade of residential work and hundreds of projects.',
       paragraphTwo: 'We believe a home should do more than make an impression. It should understand the people who live in it — their routines, their gatherings, their quiet moments.',
+      image: { _type: 'image', asset: { _type: 'reference', _ref: studioId } },
     },
   });
   console.log('✓ site settings + homepage');
 }
 
+const faqItems = [
+  ['contact', 'Do I need a finished brief before getting in touch?', 'No. A location, an approximate plot size and a sense of what you want to create are enough to begin shaping a conversation.'],
+  ['contact', 'Can I enquire about a project outside Lahore?', 'Include the project location in your brief. Availability, travel and the appropriate project scope would need to be agreed with the studio.'],
+  ['contact', 'Does this form send my enquiry?', 'Not yet. This is a demonstration of the enquiry experience. It prepares a brief in your browser that you can download. No message is sent, no appointment is booked, and no response is scheduled.'],
+  ['process', 'What should I bring to the first conversation?', 'Your plot size and location, a sense of the spaces you need, any available site information, and a few references you like. It is fine if your ideas are still taking shape.'],
+  ['process', 'Can I start with only an elevation or interior?', 'You can describe the specific part of your project in the enquiry form. The appropriate design scope can then be discussed with the studio.'],
+  ['process', 'How are fees and timelines agreed?', 'They depend on the project size, complexity and deliverables. A proposal should set out the scope, stages, fees and programme before work begins.'],
+  ['process', 'Are the drawings on this website ready to build from?', 'No. The current catalogue contains illustrative sample diagrams. Real construction drawings need to be prepared, coordinated and checked for the specific site and project.'],
+];
+
+async function seedFaqs() {
+  for (const [index, [page, question, answer]] of faqItems.entries()) {
+    await client.createOrReplace({
+      _id: `faq-${page}-${index + 1}`,
+      _type: 'faq',
+      page,
+      question,
+      answer,
+      order: index + 1,
+    });
+  }
+  console.log(`✓ ${faqItems.length} FAQs`);
+}
+
 console.log(`Seeding “${projectId}/${dataset}”…`);
+await seedProjectTypes();
 await seedProjects();
 await seedDrawings();
 await seedCredits();
 await seedSettings();
+await seedFaqs();
 console.log('Done.');
