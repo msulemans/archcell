@@ -9,14 +9,33 @@ const projects=[
 const grid=document.querySelector('#project-grid');
 const pageTitle=document.title;
 function renderProjects(filter='All'){if(!grid)return;grid.innerHTML=projects.map((p,i)=>({p,i})).filter(({p})=>filter==='All'||p.type===filter).map(({p,i})=>`<a class="project-card reveal" href="#project/${p.id}"><div class="project-image"><img src="/assets/${p.image}" alt="${p.name} — architectural inspiration" loading="lazy"><span class="project-number">0${i+1} / ${p.type.toUpperCase()}</span></div><div class="project-info"><div><h3>${p.name}</h3><p>${p.location}<span>·</span>${p.area}<span>·</span>${p.year}</p></div><span class="project-arrow" aria-hidden="true">↗</span></div></a>`).join('');observeReveals();}
-const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');observer.unobserve(e.target)}}),{threshold:.12});
-function observeReveals(){document.querySelectorAll('.reveal').forEach(el=>observer.observe(el))}
+const observer='IntersectionObserver' in window?new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');observer.unobserve(e.target)}}),{threshold:.08}):null;
+if(observer)document.documentElement.classList.add('has-reveals');
+function observeReveals(){document.querySelectorAll('.reveal:not(.visible)').forEach(el=>observer?observer.observe(el):el.classList.add('visible'))}
 renderProjects();
 const menuButton=document.querySelector('.menu-button'),mobileNav=document.querySelector('.mobile-nav');
-function closeMenu(){menuButton.setAttribute('aria-expanded','false');mobileNav.classList.remove('open');mobileNav.inert=true;document.body.classList.remove('locked')}
-menuButton.addEventListener('click',()=>{const opened=menuButton.getAttribute('aria-expanded')==='true';menuButton.setAttribute('aria-expanded',String(!opened));mobileNav.classList.toggle('open',!opened);mobileNav.inert=opened;document.body.classList.toggle('locked',!opened)});
+function setMenu(opened,restoreFocus=false){
+ menuButton.setAttribute('aria-expanded',String(opened));
+ menuButton.setAttribute('aria-label',opened?'Close navigation':'Open navigation');
+ mobileNav.classList.toggle('open',opened);mobileNav.inert=!opened;
+ document.body.classList.toggle('menu-open',opened);
+ document.querySelectorAll('#main-content,#project-view,.site-footer,.brand,.header-cta,.skip-link').forEach(el=>el.inert=opened);
+ if(opened)mobileNav.querySelector('a').focus();
+ else if(restoreFocus)menuButton.focus();
+}
+function closeMenu(){setMenu(false)}
+menuButton.addEventListener('click',()=>setMenu(menuButton.getAttribute('aria-expanded')!=='true',true));
 mobileNav.querySelectorAll('a').forEach(a=>a.addEventListener('click',closeMenu));
-window.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu()});
+window.addEventListener('keydown',e=>{
+ if(menuButton.getAttribute('aria-expanded')!=='true')return;
+ if(e.key==='Escape'){e.preventDefault();setMenu(false,true)}
+ if(e.key==='Tab'){
+  const controls=[menuButton,...mobileNav.querySelectorAll('a')];
+  const index=controls.indexOf(document.activeElement);
+  e.preventDefault();controls[(index+(e.shiftKey?-1:1)+controls.length)%controls.length].focus();
+ }
+});
+matchMedia('(max-width: 1100px)').addEventListener('change',()=>closeMenu());
 
 // Each sheet is an original, clearly marked illustrative diagram for the design preview.
 const sheets=[
@@ -73,21 +92,49 @@ function drawingSVG(sheet,project=projects[0],compact=false){
 if(document.querySelector('#plan-teaser'))document.querySelector('#plan-teaser').innerHTML=drawingSVG(sheets[0]);
 let activeProject=projects[0],category='Architecture',currentSheet=0,zoom=1;
 const detail=document.querySelector('#project-view'),main=document.querySelector('#main-content'),transition=document.querySelector('.page-transition');
+main.tabIndex=-1;detail.tabIndex=-1;
 function renderDetail(project){
  activeProject=project;category='Architecture';const next=projects[(projects.indexOf(project)+1)%projects.length];
- detail.innerHTML=`<article><section class="project-hero"><img src="/assets/${project.image}" alt="${project.name} — reference photography"><div class="project-hero-shade"></div><a class="project-back" href="#work">← Back to selected work</a><div class="project-hero-title"><p class="eyebrow">${project.type.toUpperCase()} / CONCEPT SHOWCASE</p><h1 tabindex="-1">${project.name}</h1><p>${project.location}<span>·</span>${project.year}</p></div><a href="#project/${project.id}/drawings" class="project-hero-cta">Explore the drawings <span>↓</span></a></section><div class="project-subnav"><a href="#project/${project.id}">The story</a><a href="#project/${project.id}/drawings">Drawing catalogue <span>18</span></a><span>${project.area} / ${project.type}</span></div><section class="project-story section-pad"><div><p class="eyebrow">THE IDEA</p><h2>${project.theme}</h2></div><div><p>${project.description}</p><dl class="project-facts"><div><dt>LOCATION</dt><dd>${project.location}</dd></div><div><dt>PLOT SIZE</dt><dd>${project.area}</dd></div><div><dt>MATERIAL PALETTE</dt><dd>${project.materials}</dd></div><div><dt>PROJECT SCOPE</dt><dd>Architecture, interiors & working drawings</dd></div></dl><p class="project-disclaimer">Concept showcase. Project details and photography are illustrative, ready to be replaced with the studio’s completed work.</p></div></section><section class="detail-image-pair"><img src="/assets/${project.id==='warm-minimalism'?'facade-detail.jpg':'interior.jpg'}" alt="Interior material and atmosphere reference" loading="lazy"><div><img src="/assets/${project.id==='quiet-courtyard'?'residence.jpg':'courtyard.jpg'}" alt="Architectural light and space reference" loading="lazy"><span>LIGHT, MATERIAL & THE SPACES BETWEEN.</span></div></section><section id="project-catalogue" class="catalogue section-pad"><div class="section-heading"><div><p class="eyebrow">FROM VISION TO DETAIL</p><h2>The complete <em>picture.</em></h2></div><div class="catalogue-count"><strong>18</strong><span>DRAWINGS<br>6 DISCIPLINES</span></div></div><p class="catalogue-intro">Explore each discipline, open a sheet, and look closer. These sample diagrams demonstrate the project library; they are not construction documents.</p><div class="catalogue-filters" aria-label="Filter drawings by discipline">${cats.map(c=>`<button data-category="${c}" aria-pressed="${c===category}">${c}<span>${c==='All drawings'?18:sheets.filter(s=>s.category===c).length}</span></button>`).join('')}</div><div class="sheet-grid" id="sheet-grid" aria-live="polite"></div><p class="catalogue-note">SAMPLE COLLECTION / SVG FORMAT / NOT TO SCALE</p></section><a class="next-project" href="#project/${next.id}"><img src="/assets/${next.image}" alt="${next.name}" loading="lazy"><div><p class="eyebrow">NEXT PROJECT</p><h2>${next.name}</h2></div><span>↗</span></a><div class="detail-footer"><a href="#">ARCHCELL</a><span>LAHORE, PAKISTAN</span><a href="#work">ALL PROJECTS ↗</a></div></article>`;
+ detail.innerHTML=`<article><section class="project-hero"><img src="/assets/${project.image}" alt="${project.name} — reference photography"><div class="project-hero-shade"></div><a class="project-back" href="${main.querySelector('#work')?'#work':'/projects/#work'}">← Back to selected work</a><div class="project-hero-title"><p class="eyebrow">${project.type.toUpperCase()} / CONCEPT SHOWCASE</p><h1 tabindex="-1">${project.name}</h1><p>${project.location}<span>·</span>${project.year}</p></div><a href="#project/${project.id}/drawings" class="project-hero-cta">Explore the drawings <span>↓</span></a></section><nav class="project-subnav" aria-label="Project sections"><a href="#project/${project.id}">The story</a><a href="#project/${project.id}/drawings">Drawing catalogue <span>18</span></a><span>${project.area} / ${project.type}</span></nav><section class="project-story section-pad"><div><p class="eyebrow">THE IDEA</p><h2>${project.theme}</h2></div><div><p>${project.description}</p><dl class="project-facts"><div><dt>LOCATION</dt><dd>${project.location}</dd></div><div><dt>PLOT SIZE</dt><dd>${project.area}</dd></div><div><dt>MATERIAL PALETTE</dt><dd>${project.materials}</dd></div><div><dt>PROJECT SCOPE</dt><dd>Architecture, interiors & working drawings</dd></div></dl><p class="project-disclaimer">Concept showcase. Project details and photography are illustrative, ready to be replaced with the studio’s completed work.</p></div></section><section class="detail-image-pair"><img src="/assets/${project.id==='warm-minimalism'?'facade-detail.jpg':'interior.jpg'}" alt="Interior material and atmosphere reference" loading="lazy"><div><img src="/assets/${project.id==='quiet-courtyard'?'residence.jpg':'courtyard.jpg'}" alt="Architectural light and space reference" loading="lazy"><span>LIGHT, MATERIAL & THE SPACES BETWEEN.</span></div></section><section id="project-catalogue" class="catalogue section-pad"><div class="section-heading"><div><p class="eyebrow">FROM VISION TO DETAIL</p><h2 tabindex="-1">The complete <em>picture.</em></h2></div><div class="catalogue-count"><strong>18</strong><span>DRAWINGS<br>6 DISCIPLINES</span></div></div><p class="catalogue-intro">Explore each discipline, open a sheet, and look closer. These sample diagrams demonstrate the project library; they are not construction documents.</p><div class="catalogue-filters" aria-label="Filter drawings by discipline">${cats.map(c=>`<button data-category="${c}" aria-pressed="${c===category}">${c}<span>${c==='All drawings'?18:sheets.filter(s=>s.category===c).length}</span></button>`).join('')}</div><div class="sheet-grid" id="sheet-grid" aria-live="polite"></div><p class="catalogue-note">SAMPLE COLLECTION / SVG FORMAT / NOT TO SCALE</p></section><a class="next-project" href="#project/${next.id}"><img src="/assets/${next.image}" alt="${next.name}" loading="lazy"><div><p class="eyebrow">NEXT PROJECT</p><h2>${next.name}</h2></div><span>↗</span></a><div class="detail-footer"><a href="/">ARCHCELL</a><span>LAHORE, PAKISTAN</span><a href="/projects/">ALL PROJECTS ↗</a></div></article>`;
  detail.querySelectorAll('[data-category]').forEach(b=>b.addEventListener('click',()=>{category=b.dataset.category;detail.querySelectorAll('[data-category]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));renderSheets()}));
  renderSheets();
 }
 function renderSheets(){document.querySelector('#sheet-grid').innerHTML=sheets.map((s,i)=>({s,i})).filter(({s})=>category==='All drawings'||s.category===category).map(({s,i})=>`<button class="sheet-card" data-sheet="${i}"><span class="sheet-image">${drawingSVG(s,activeProject,true)}<span class="open-sheet">View drawing ↗</span></span><span class="sheet-meta"><span>${s.code}<strong>${s.name}</strong></span><span aria-hidden="true">↗</span></span></button>`).join('');detail.querySelectorAll('[data-sheet]').forEach(b=>b.addEventListener('click',()=>openSheet(Number(b.dataset.sheet))));}
 let routeGeneration=0;
+function scrollToSection(element,behavior='smooth'){
+ const offset=element.id==='project-catalogue'?(document.querySelector('.project-subnav')?.offsetHeight||0):24;
+ window.scrollTo({top:Math.max(0,window.scrollY+element.getBoundingClientRect().top-offset),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':behavior});
+}
 async function route(animate=true){
- const generation=++routeGeneration;const hash=location.hash;const isProject=hash.startsWith('#project/');const wasProject=!detail.hidden;const parts=hash.slice(1).split('/');const p=projects.find(p=>p.id===parts[1]);const changePage=(isProject!==wasProject)||(isProject&&p&&p.id!==activeProject.id);
- closeMenu();
- if(changePage&&animate&&!matchMedia('(prefers-reduced-motion: reduce)').matches){transition.classList.add('active');await new Promise(r=>setTimeout(r,420));}
+ const generation=++routeGeneration,hash=location.hash,parts=hash.slice(1).split('/');
+ const isProject=hash.startsWith('#project/'),wasProject=!detail.hidden;
+ const p=projects.find(p=>p.id===parts[1]);
+ const validProject=isProject&&p&&parts.length<=3&&(!parts[2]||parts[2]==='drawings');
+ const changePage=isProject!==wasProject||(isProject&&(!validProject||p.id!==activeProject.id||detail.dataset.project!==p.id));
+ closeMenu();document.querySelector('.cursor-label').classList.remove('shown');
+ if(changePage&&animate&&!matchMedia('(prefers-reduced-motion: reduce)').matches){transition.classList.add('active');await new Promise(r=>setTimeout(r,220));}
  if(generation!==routeGeneration)return;
- if(isProject&&p){main.hidden=true;detail.hidden=false;document.body.classList.add('project-open');if(changePage||!detail.innerHTML)renderDetail(p);document.title=`${p.name} — Archcell`;if(parts[2]==='drawings'){document.querySelector('#project-catalogue').scrollIntoView({behavior:changePage?'instant':'smooth'})}else{window.scrollTo({top:0,behavior:'instant'});detail.querySelector('h1').focus({preventScroll:true})}}
- else{main.hidden=false;detail.hidden=true;document.body.classList.remove('project-open');document.title=pageTitle;const el=document.getElementById(hash.slice(1));if(el)el.scrollIntoView({behavior:wasProject?'instant':'smooth'});else window.scrollTo({top:0,behavior:'instant'});observeReveals();}
+ if(isProject){
+  main.hidden=true;detail.hidden=false;document.body.classList.add('project-open');
+  if(validProject){
+   if(changePage||!detail.innerHTML){renderDetail(p);detail.dataset.project=p.id;}
+   const drawings=parts[2]==='drawings';
+   document.title=`${p.name}${drawings?' — Drawings':''} — Archcell`;
+   detail.querySelectorAll('.project-subnav a').forEach((a,i)=>i===Number(drawings)?a.setAttribute('aria-current','location'):a.removeAttribute('aria-current'));
+   if(drawings){scrollToSection(document.querySelector('#project-catalogue'),changePage?'instant':'smooth');detail.querySelector('#project-catalogue h2').focus({preventScroll:true});}
+   else{window.scrollTo({top:0,behavior:'instant'});detail.querySelector('h1').focus({preventScroll:true});}
+  }else{
+   detail.dataset.project='';
+   detail.innerHTML='<section class="page-heading error-page section-pad"><p class="eyebrow">PROJECT NOT FOUND</p><h1 tabindex="-1">Let’s find<br><em>your way home.</em></h1><p>This project link is no longer available. Explore the collection to find a project.</p><div><a class="solid-button" href="/projects/">View all projects <span>↗</span></a></div></section>';
+   document.title='Project Not Found — Archcell';window.scrollTo({top:0,behavior:'instant'});detail.querySelector('h1').focus({preventScroll:true});
+  }
+ }else{
+  main.hidden=false;detail.hidden=true;document.body.classList.remove('project-open');document.title=pageTitle;
+  const el=document.getElementById(hash.slice(1));
+  if(el)scrollToSection(el,wasProject?'instant':'smooth');else window.scrollTo({top:0,behavior:'instant'});
+  if(wasProject){const card=main.querySelector(`.project-card[href="#project/${activeProject.id}"]`);(card||main).focus({preventScroll:true});}
+  observeReveals();
+ }
  requestAnimationFrame(()=>transition.classList.remove('active'));
 }
 window.addEventListener('hashchange',()=>route());
@@ -96,15 +143,28 @@ route(false);
 
 const dialog=document.querySelector('#drawing-dialog');
 function updateSheet(){const sheet=sheets[currentSheet];document.querySelector('#drawing-title').textContent=sheet.name;document.querySelector('#drawing-code').textContent=`${activeProject.name} / ${sheet.code}`;document.querySelector('#drawing-sheet').innerHTML=drawingSVG(sheet,activeProject);document.querySelector('#sheet-counter').textContent=`${String(currentSheet+1).padStart(2,'0')} / 18`;document.querySelector('#previous-sheet').disabled=currentSheet===0;document.querySelector('#next-sheet').disabled=currentSheet===sheets.length-1;setZoom(1);}
-function openSheet(index){currentSheet=index;updateSheet();dialog.showModal();document.body.classList.add('locked')}
+function openSheet(index){currentSheet=index;dialog.showModal();document.body.classList.add('locked');updateSheet()}
 function closeSheet(){dialog.close();document.body.classList.remove('locked')}
 dialog.querySelector('.viewer-close').addEventListener('click',closeSheet);dialog.addEventListener('close',()=>document.body.classList.remove('locked'));
 document.querySelector('#previous-sheet').addEventListener('click',()=>{if(currentSheet>0){currentSheet--;updateSheet()}});
 document.querySelector('#next-sheet').addEventListener('click',()=>{if(currentSheet<sheets.length-1){currentSheet++;updateSheet()}});
-function setZoom(value){zoom=Math.max(.75,Math.min(2.5,value));const el=document.querySelector('#drawing-sheet');el.style.width=`${zoom*100}%`;el.style.maxWidth=zoom>1?'none':'1200px';document.querySelector('#zoom-fit').textContent=Math.round(zoom*100)+'%';document.querySelector('#zoom-out').disabled=zoom<=.75;document.querySelector('#zoom-in').disabled=zoom>=2.5;}
+function setZoom(value){
+ zoom=Math.max(.75,Math.min(2.5,value));
+ const canvas=document.querySelector('.viewer-canvas'),el=document.querySelector('#drawing-sheet');
+ const styles=getComputedStyle(canvas);
+ const width=canvas.clientWidth-parseFloat(styles.paddingLeft)-parseFloat(styles.paddingRight);
+ const height=canvas.clientHeight-parseFloat(styles.paddingTop)-parseFloat(styles.paddingBottom);
+ const fitWidth=Math.max(1,Math.min(width,height*800/570));
+ el.style.width=`${fitWidth*zoom}px`;el.style.maxWidth='none';
+ const fit=document.querySelector('#zoom-fit');fit.textContent=zoom===1?'Fit':Math.round(zoom*100)+'%';
+ fit.setAttribute('aria-label','Fit entire drawing to viewer');
+ document.querySelector('#zoom-out').disabled=zoom<=.75;document.querySelector('#zoom-in').disabled=zoom>=2.5;
+ if(zoom===1){canvas.scrollTop=0;canvas.scrollLeft=0;}
+}
+new ResizeObserver(()=>{if(dialog.open)setZoom(zoom)}).observe(document.querySelector('.viewer-canvas'));
 document.querySelector('#zoom-in').addEventListener('click',()=>setZoom(zoom+.25));document.querySelector('#zoom-out').addEventListener('click',()=>setZoom(zoom-.25));document.querySelector('#zoom-fit').addEventListener('click',()=>setZoom(1));
 document.querySelector('#download-sheet').addEventListener('click',()=>{const s=sheets[currentSheet];const blob=new Blob([drawingSVG(s,activeProject)],{type:'image/svg+xml'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`archcell-${activeProject.id}-${s.code}-SAMPLE.svg`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});
-dialog.addEventListener('keydown',e=>{if(e.key==='ArrowRight'&&currentSheet<17){currentSheet++;updateSheet()}if(e.key==='ArrowLeft'&&currentSheet>0){currentSheet--;updateSheet()}});
+dialog.addEventListener('keydown',e=>{if(e.key==='ArrowRight'&&currentSheet<sheets.length-1){e.preventDefault();currentSheet++;updateSheet()}if(e.key==='ArrowLeft'&&currentSheet>0){e.preventDefault();currentSheet--;updateSheet()}});
 const creditsDialog=document.querySelector('#credits-dialog');
 document.querySelector('#credits-button').addEventListener('click',()=>{creditsDialog.showModal();document.body.classList.add('locked')});
 creditsDialog.querySelector('.credits-close').addEventListener('click',()=>creditsDialog.close());creditsDialog.addEventListener('close',()=>document.body.classList.remove('locked'));
@@ -116,6 +176,7 @@ const cursor=document.querySelector('.cursor-label');
 if(matchMedia('(hover: hover) and (pointer: fine)').matches){document.addEventListener('pointermove',e=>{cursor.style.left=e.clientX+'px';cursor.style.top=e.clientY+'px';cursor.classList.toggle('shown',!!e.target.closest('.project-image'))});document.addEventListener('pointerleave',()=>cursor.classList.remove('shown'));}
 let scrollTick=false;window.addEventListener('scroll',()=>{if(!scrollTick){requestAnimationFrame(()=>{if(!matchMedia('(prefers-reduced-motion: reduce)').matches&&detail.hidden){const heroImage=document.querySelector('.hero-image');const y=window.scrollY;if(heroImage&&y<window.innerHeight)heroImage.style.translate=`0 ${y*.16}px`;}scrollTick=false});scrollTick=true}},{passive:true});
 observeReveals();
-mobileNav.addEventListener('keydown',e=>{if(e.key==='Tab'){const links=[...mobileNav.querySelectorAll('a')];if(!e.shiftKey&&document.activeElement===links.at(-1)){e.preventDefault();menuButton.focus()}}});
-menuButton.addEventListener('keydown',e=>{if(e.key==='Tab'&&menuButton.getAttribute('aria-expanded')==='true'){e.preventDefault();const links=mobileNav.querySelectorAll('a');links[e.shiftKey?links.length-1:0].focus()}});
-mobileNav.querySelector('a').addEventListener('keydown',e=>{if(e.key==='Tab'&&e.shiftKey){e.preventDefault();menuButton.focus()}});
+
+// Keep utility links on the current project instead of triggering the hash router.
+document.querySelectorAll('.back-top').forEach(link=>link.addEventListener('click',e=>{e.preventDefault();window.scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});}));
+document.querySelector('.skip-link')?.addEventListener('click',e=>{e.preventDefault();const target=detail.hidden?main:detail;target.focus({preventScroll:true});scrollToSection(target,'instant');});
