@@ -1,0 +1,8 @@
+---
+const { project, index } = Astro.props;
+const num = String(index + 1).padStart(2, '0');
+---
+<a class="project-card reveal" href={`/projects/${project.id}/`} data-page-transition data-type={project.type}>
+  <div class="project-image"><img src={`/assets/${project.image}`} alt={`${project.name} — architectural inspiration`} loading="lazy" /><span class="project-number">{num} / {project.type.toUpperCase()}</span></div>
+  <div class="project-info"><div><h3>{project.name}</h3><p>{project.location}<span>·</span>{project.area}<span>·</span>{project.year}</p></div><span class="project-arrow" aria-hidden="true">↗</span></div>
+</a>

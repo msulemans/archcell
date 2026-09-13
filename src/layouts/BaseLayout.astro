@@ -1,0 +1,68 @@
+---
+import '../styles/global.css';
+import '../styles/interior.css';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import CreditsDialog from '../components/CreditsDialog.astro';
+import DrawingDialog from '../components/DrawingDialog.astro';
+
+const {
+  title,
+  description,
+  interior = false,
+  bodyClass = '',
+  projectSlug,
+  projectName,
+} = Astro.props;
+
+// Canonical URL: matches the legacy output (directory pages end in "/",
+// the 404 page is 404.html).
+let canonicalPath = Astro.url.pathname;
+if (canonicalPath === '/404') canonicalPath = '/404.html';
+else if (!canonicalPath.endsWith('/') && !canonicalPath.endsWith('.html')) canonicalPath += '/';
+const canonical = new URL(canonicalPath, Astro.site);
+
+const classes = [interior ? 'interior-page' : '', bodyClass].filter(Boolean).join(' ');
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#141613" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%23141613'/%3E%3Cpath d='M12 49L31 13L51 49H41L31 30L21 49Z' fill='%23c8a76a'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;450;500;600;700&family=Italiana&display=swap" rel="stylesheet" />
+  <link rel="canonical" href={canonical} />
+  {/* Legacy hash routes (#project/<slug>[/drawings]) redirect to the real pages. */}
+  <script is:inline>
+    (function () {
+      var m = location.hash.match(/^#project\/([a-z0-9-]+)(\/drawings)?$/);
+      if (!m) return;
+      var path = '/projects/' + m[1] + (m[2] ? '/drawings/' : '/');
+      if (path !== location.pathname) location.replace(path);
+    })();
+  </script>
+</head>
+<body class={classes || undefined} data-project={projectSlug} data-project-name={projectName}>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <SiteHeader />
+  <main id="main-content" tabindex="-1">
+    <slot />
+  </main>
+  <DrawingDialog />
+  <CreditsDialog />
+  <div class="page-transition" aria-hidden="true"><span>ARCHCELL</span></div>
+  <div class="cursor-label" aria-hidden="true">VIEW<br>PROJECT ↗</div>
+  <SiteFooter />
+  <script>
+    import '../scripts/site.js';
+    import '../scripts/viewer.js';
+    import '../scripts/filters.js';
+    import '../scripts/contact.js';
+  </script>
+</body>
+</html>

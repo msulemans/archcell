@@ -1,0 +1,27 @@
+---
+import { isCurrent } from '../lib/nav.js';
+
+const path = Astro.url.pathname;
+const nav = [
+  ['/projects/', 'Selected work', '06'],
+  ['/studio/', 'The studio'],
+  ['/services/', 'Services'],
+  ['/process/', 'Our process'],
+  ['/drawings/', 'Drawing room'],
+];
+---
+<header class="site-header" id="site-header">
+  <a class="brand" href="/" aria-label="Archcell home"><span class="brand-icon"><img src="/assets/archcell-logo.jpg" alt="" /></span><span>ARCHCELL<small>ARCHITECTURE & INTERIORS</small></span></a>
+  <nav aria-label="Main navigation">
+    {nav.map(([href, label, count]) => (
+      <a href={href} aria-current={isCurrent(path, href) ? 'page' : undefined}>{label}{count && <> <span>{count}</span></>}</a>
+    ))}
+  </nav>
+  <a class="header-cta" href="/contact/" aria-current={isCurrent(path, '/contact/') ? 'page' : undefined}>Start a project <span>↗</span></a>
+  <button class="menu-button" type="button" aria-label="Open navigation" aria-controls="mobile-nav" aria-expanded="false"><span></span><span></span></button>
+</header>
+<nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation" inert>
+  {nav.map(([href, label]) => <a href={href} aria-current={isCurrent(path, href) ? 'page' : undefined}>{label}</a>)}
+  <a href="/contact/" aria-current={isCurrent(path, '/contact/') ? 'page' : undefined}>Start a project ↗</a>
+  <span>LAHORE, PAKISTAN</span>
+</nav>

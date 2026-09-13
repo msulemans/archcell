@@ -1,0 +1,32 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import { projects, sheets } from '../lib/data.js';
+import { drawingSVG } from '../lib/drawings.js';
+---
+<BaseLayout
+  title="Archcell — Spaces for the way you live."
+  description="Archcell is a Lahore-based architecture and interior design practice. Explore considered homes, expressive elevations and complete project drawing collections."
+>
+  <section class="hero" id="home">
+    <img class="hero-image" src="/assets/residence.jpg" alt="Sculptural modern residence set in a green landscape" fetchpriority="high" />
+    <div class="hero-shade"></div>
+    <div class="hero-topline"><span>CONSIDERED ARCHITECTURE. PERSONAL SPACES.</span><span>31.5204° N &nbsp; 74.3587° E</span></div>
+    <div class="hero-content"><p class="eyebrow light">ARCHITECTURE, ROOTED IN LIFE</p><h1>Spaces for<br>the way you <em>live.</em></h1><div class="hero-bottom"><p>From the first line to the final detail.<br>Homes imagined around you.</p><a href="#work" class="round-link"><span>Explore our work</span><i>↘</i></a></div></div>
+    <div class="hero-footer"><span>BASED IN LAHORE. BUILT AROUND YOU.</span><a href="/projects/courtyard-house/" data-page-transition>FEATURED / THE COURTYARD HOUSE <span>↗</span></a><a href="#work" class="scroll-note">SCROLL TO DISCOVER <span>↓</span></a></div>
+  </section>
+  <section class="intro section-pad" id="intro"><div class="eyebrow">01 / A WAY OF SEEING</div><div><h2>Good architecture is seen.<br><span>Great architecture is <em>felt.</em></span></h2><div class="intro-bottom"><p>Light that falls just right. Rooms that bring people together. A home that feels unmistakably yours. This is where our work begins.</p><a class="text-link" href="/process/">Discover our approach <span>↗</span></a></div></div></section>
+  <section class="work section-pad" id="work">
+    <div class="section-heading"><div><p class="eyebrow">02 / SELECTED WORK</p><h2>A sense of <em>place.</em></h2></div><p>Individual homes.<br>A shared attention to detail.</p></div>
+    <div id="project-grid" class="project-grid">
+      {projects.map((project, i) => <ProjectCard project={project} index={i} />)}
+    </div>
+    <div class="work-note"><span>A PREVIEW OF POSSIBILITIES</span><p>Sample projects & reference photography. The Archcell portfolio is coming into focus.</p></div>
+  </section>
+  <section class="image-interlude"><img src="/assets/interior.jpg" alt="Sunlight falling across a considered, warm living space" loading="lazy" /><div class="interlude-shade"></div><div class="reveal"><p class="eyebrow light">MORE THAN FOUR WALLS</p><h2>The art of<br><em>coming home.</em></h2></div><span>MATERIAL. LIGHT. LIFE.</span></section>
+  <section class="drawing-room section-pad" id="drawing-room">
+    <div class="drawing-copy reveal"><p class="eyebrow">03 / THE DRAWING ROOM</p><h2>Beautiful outside.<br><em>Considered within.</em></h2><p>Behind every elevation is a world of decisions. Explore the plans, systems and details that bring a home together, in one complete project collection.</p><div class="discipline-tags"><span>Architecture</span><span>Structure</span><span>Electrical</span><span>Plumbing</span><span>Interiors</span></div><a class="text-link" href="/projects/courtyard-house/drawings/" data-page-transition>Step inside the catalogue <span>↗</span></a></div>
+    <a class="drawing-teaser reveal" href="/projects/courtyard-house/drawings/" data-page-transition aria-label="Open The Courtyard House drawing catalogue"><div class="drawing-teaser-top"><span>ARCHCELL / PROJECT ARCHIVE</span><span>↗</span></div><div id="plan-teaser" set:html={drawingSVG(sheets[0], projects[0])}></div><div class="drawing-teaser-bottom"><div><span>THE COURTYARD HOUSE</span><strong>Every detail. In one place.</strong></div><span>18<br><small>SHEETS</small></span></div></a>
+  </section>
+  <section class="studio section-pad" id="studio"><div class="studio-image reveal"><img src="/assets/courtyard.jpg" alt="A planted courtyard framed by concrete and glass" loading="lazy" /><span>FINDING THE EXTRAORDINARY IN THE EVERYDAY.</span></div><div class="studio-copy reveal"><p class="eyebrow">04 / THE STUDIO</p><h2>Local roots.<br><em>Lasting spaces.</em></h2><p>Archcell is a Lahore-based architecture and interior design practice, shaped by a decade of residential work and hundreds of projects.</p><p>We believe a home should do more than make an impression. It should understand the people who live in it — their routines, their gatherings, their quiet moments.</p><div class="studio-stats"><div><strong>10<span>+</span></strong><span>Years of practice</span></div><div><strong>100<span>s</span></strong><span>Projects, each personal</span></div></div><div class="studio-services"><span>Architecture</span><span>Interior design</span><span>Complete working drawings</span></div></div></section>
+</BaseLayout>

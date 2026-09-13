@@ -1,0 +1,40 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import ProjectDetail from '../../../components/ProjectDetail.astro';
+import { projects } from '../../../lib/data.js';
+
+export function getStaticPaths() {
+  return projects.map((project) => ({ params: { slug: project.id }, props: { project } }));
+}
+
+const { project } = Astro.props;
+---
+<BaseLayout
+  title={`${project.name} — Drawings — Archcell`}
+  description={`Explore the illustrative drawing catalogue for ${project.name}: architecture, elevations, structure, electrical, plumbing and interiors.`}
+  interior
+  bodyClass="project-open"
+  projectSlug={project.id}
+  projectName={project.name}
+>
+  <ProjectDetail project={project} drawings />
+</BaseLayout>
+<script>
+  // The drawings route deep-links to the catalogue section: align it below
+  // the sticky subnav (mirrors the legacy router) and move focus there.
+  const alignCatalogue = () => {
+    const catalogue = document.querySelector('#project-catalogue');
+    if (!catalogue) return;
+    const subnav = document.querySelector('.project-subnav');
+    window.scrollTo({
+      top: Math.max(0, window.scrollY + catalogue.getBoundingClientRect().top - (subnav?.offsetHeight || 0)),
+      behavior: 'instant',
+    });
+  };
+  requestAnimationFrame(() => {
+    alignCatalogue();
+    document.querySelector('#project-catalogue h2')?.focus({ preventScroll: true });
+  });
+  // Re-align once images finish loading, in case layout shifted above.
+  window.addEventListener('load', alignCatalogue, { once: true });
+</script>

@@ -1,0 +1,21 @@
+{/* Shell only: the viewer script clones a sheet card's SVG into #drawing-sheet. */}
+<dialog id="drawing-dialog" class="drawing-dialog" aria-labelledby="drawing-title">
+  <div class="viewer-header">
+    <div><span class="eyebrow" id="drawing-code"></span><h2 id="drawing-title"></h2></div>
+    <button class="icon-button viewer-close" aria-label="Close drawing viewer">×</button>
+  </div>
+  <div class="viewer-canvas"><div id="drawing-sheet"></div></div>
+  <div class="viewer-toolbar">
+    <div class="viewer-pages">
+      <button class="icon-button" id="previous-sheet" aria-label="Previous drawing">←</button>
+      <span id="sheet-counter"></span>
+      <button class="icon-button" id="next-sheet" aria-label="Next drawing">→</button>
+    </div>
+    <div class="zoom-controls">
+      <button class="icon-button" id="zoom-out" aria-label="Zoom out">−</button>
+      <button id="zoom-fit">Fit</button>
+      <button class="icon-button" id="zoom-in" aria-label="Zoom in">+</button>
+    </div>
+    <button class="download-button" id="download-sheet">Download SVG <span>↓</span></button>
+  </div>
+</dialog>

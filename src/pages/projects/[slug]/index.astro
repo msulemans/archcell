@@ -1,0 +1,21 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import ProjectDetail from '../../../components/ProjectDetail.astro';
+import { projects } from '../../../lib/data.js';
+
+export function getStaticPaths() {
+  return projects.map((project) => ({ params: { slug: project.id }, props: { project } }));
+}
+
+const { project } = Astro.props;
+---
+<BaseLayout
+  title={`${project.name} — Archcell`}
+  description={`${project.description} A concept showcase in ${project.location}.`}
+  interior
+  bodyClass="project-open"
+  projectSlug={project.id}
+  projectName={project.name}
+>
+  <ProjectDetail project={project} />
+</BaseLayout>

@@ -1,0 +1,15 @@
+---
+import { credits } from '../lib/data.js';
+---
+<dialog id="credits-dialog" class="credits-dialog" aria-labelledby="credits-title">
+  <button class="icon-button credits-close" aria-label="Close photography credits">×</button>
+  <p class="eyebrow">THE PEOPLE BEHIND THE PICTURES</p>
+  <h2 id="credits-title">Photography <em>credits.</em></h2>
+  <p>These photographs are visual references for this design preview and do not depict verified Archcell projects.</p>
+  <div id="credits-list">
+    {credits.map(([name, where, url]) => (
+      <a href={url} target="_blank" rel="noopener"><span>{name}<small>{where}</small></span><span>↗</span></a>
+    ))}
+  </div>
+  <a href="https://unsplash.com/license" target="_blank" rel="noopener" class="text-link">Unsplash License ↗</a>
+</dialog>
