@@ -9,7 +9,8 @@ const header=`<header class="site-header" id="site-header"><a class="brand" href
 const footer=`<footer class="site-footer section-pad"><div class="footer-top"><span class="eyebrow">ARCHCELL / LAHORE, PAKISTAN</span><a class="text-link" href="/contact/">Tell us about your project <span>↗</span></a></div><p class="footer-statement">A place to call <em>yours.</em></p><nav class="footer-navigation" aria-label="Footer navigation"><a href="/projects/">Selected work</a><a href="/studio/">The studio</a><a href="/services/">Services</a><a href="/process/">Our process</a><a href="/drawings/">Drawing room</a><a href="/contact/">Contact</a></nav><div class="footer-bottom"><a href="/" class="footer-wordmark">ARCHCELL</a><p>Architecture & interiors.<br>Thoughtfully, from the ground up.</p><a href="#" class="back-top">BACK TO TOP ↑</a></div><div class="footer-fine"><span>© 2026 Archcell</span><span>Design preview. Illustrative projects and drawings; not for construction.</span><a href="/privacy/">About this preview</a><button id="credits-button">Photography credits ↗</button></div></footer>`;
 let home=fs.readFileSync(path.join(dist,'index.html'),'utf8');
 home=home.replace(/<header class="site-header"[\s\S]*?<main id="main-content">/,header+'\n<main id="main-content">');
-home=home.replace(/<footer class="site-footer[\s\S]*?<\/footer>/,footer);
+home=home.replace(/<footer class="site-footer[\s\S]*?<\/footer>/,'');
+home=home.replace('</main>','</main>\n'+footer);
 home=home.replace('href="#studio">Discover our approach','href="/process/">Discover our approach');
 if(!home.includes('href="/pages.css"'))home=home.replace('<link rel="stylesheet" href="/style.css" />','<link rel="stylesheet" href="/style.css" />\n<link rel="stylesheet" href="/pages.css" />');
 if(!home.includes('src="/pages.js"'))home=home.replace('<script src="/app.js" defer></script>','<script src="/app.js" defer></script>\n<script src="/pages.js" defer></script>');
@@ -17,7 +18,7 @@ home=home.replace(/\s*<link rel="canonical"[^>]*>/g,'');
 home=home.replace('</head>',`<link rel="canonical" href="${origin}/" />\n</head>`);
 fs.writeFileSync(path.join(dist,'index.html'),home);
 for(const [slug,[title,description]]of Object.entries(pages)){
- let html=home.replace(/<title>[\s\S]*?<\/title>/,`<title>${title}</title>`).replace(/<meta name="description" content="[^"]*" \/>/,`<meta name="description" content="${description}" />`).replace('<body>','<body class="interior-page">').replace(/<main id="main-content">[\s\S]*?<\/main>/,`<main id="main-content">${fs.readFileSync(path.join(root,'pages',slug+'.html'),'utf8')}${footer}</main>`).replace(/<link rel="canonical"[^>]*>/,`<link rel="canonical" href="${origin}/${slug==='404'?'404.html':slug+'/'}" />`);
+ let html=home.replace(/<title>[\s\S]*?<\/title>/,`<title>${title}</title>`).replace(/<meta name="description" content="[^"]*" \/>/,`<meta name="description" content="${description}" />`).replace('<body>','<body class="interior-page">').replace(/<main id="main-content">[\s\S]*?<\/main>/,`<main id="main-content">${fs.readFileSync(path.join(root,'pages',slug+'.html'),'utf8')}</main>`).replace(/<link rel="canonical"[^>]*>/,`<link rel="canonical" href="${origin}/${slug==='404'?'404.html':slug+'/'}" />`);
  const target=slug==='404'?path.join(dist,'404.html'):path.join(dist,slug,'index.html');fs.mkdirSync(path.dirname(target),{recursive:true});fs.writeFileSync(target,html);
 }
 console.log('Updated homepage and generated 8 complete supporting pages.');

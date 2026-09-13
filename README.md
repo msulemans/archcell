@@ -83,7 +83,62 @@ Project detail views are client-side routes rendered into `#project-view`:
 - `#project/<id>` — project story (`/projects/#project/courtyard-house`)
 - `#project/<id>/drawings` — its drawing catalogue (`/projects/#project/courtyard-house/drawings`)
 
+## Design system
+
+All colour and type decisions live as tokens in `style.css` `:root`. Neither stylesheet
+contains an ad-hoc hex value — every colour resolves through a token.
+
+### Colour
+
+| Token | Value | Role |
+| --- | --- | --- |
+| `--ink` | `#141613` | Page background; text on light surfaces |
+| `--panel` | `#1c1f1a` | Raised dark surfaces |
+| `--paper` | `#f0f0e9` | Light section background |
+| `--sheet` | `#e8eadd` | Drawing-sheet paper (matches the generated SVG) |
+| `--gold` | `#c8a76a` | **Accent on dark surfaces** |
+| `--gold-deep` | `#7d6134` | **Accent on light surfaces** (4.2:1 on paper) |
+| `--gold-hover` | `#b3924f` | Solid-button hover |
+| `--gold-soft` | `#f5efe0` | Selected/highlighted tint on paper |
+| `--muted` | `#a5a89d` | Secondary text on dark |
+| `--muted-deep` | `#5f6456` | Secondary text on light |
+| `--line` | `rgba(255,255,255,.19)` | Rules on dark |
+| `--line-deep` | `#d5d1c2` | Rules on light |
+| `--paper-soft` | `#d3d4c8` | Tertiary text on dark |
+| `--danger` | `#963c2e` | Form validation errors |
+
+**The accent rule:** `<em>` inside a heading is the brand's signature italic highlight.
+It is **always `--gold` on a dark surface and `--gold-deep` on a light surface.** The
+deeper tone exists because brand gold only reaches 2.0:1 on paper, which is unreadable.
+
+### Type scale
+
+Section headings use one of three tokens so the whole site shares a single rhythm:
+
+| Token | Value | Used by |
+| --- | --- | --- |
+| `--h2-section` | `clamp(40px, 4.4vw, 68px)` | Every content-section heading |
+| `--h2-item` | `clamp(26px, 2.4vw, 36px)` | Headings that repeat or sit inside a panel |
+| `--h2-display` | `clamp(60px, 7.7vw, 120px)` | The single full-bleed statement section |
+
+`clamp()` handles all responsive scaling, so breakpoints no longer override heading sizes.
+
+### Surface rhythm
+
+Interior pages follow one pattern: **dark hero and content, closing on a single light
+`--paper` section.** Every page ends on that light note — the FAQ, drawing guide and
+studio story all sit on `--paper`.
+
+### Component rules
+
+- `.solid-button` is the only solid CTA: `--gold` fill with `--ink` text.
+- Accordions (`.service-item`, `.faq-list`) share a 17px `summary`; only their row
+  dividers differ (`.service-item` uses rules, `.faq-list` uses a border).
+- `style.css` owns global chrome (header, footer, mobile nav). `pages.css` styles
+  interior-page content and never re-declares those global components.
+
 ## Note on canonical URLs
+
 
 `build-pages.mjs` writes a canonical tag pointing at the original host:
 
