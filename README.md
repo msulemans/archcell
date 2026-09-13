@@ -21,12 +21,12 @@ pages/             Source fragments, one per supporting route
   contact.html
   privacy.html
   404.html
-dist/              Deployable output (generated — do not hand-edit)
+dist/              Deployable output (route HTML is generated)
   index.html       Homepage (hand-authored, also the template the generator reads)
   <route>/index.html
   404.html
-  app.js           Project data, hash routing, drawing viewer
-  pages.js         Archive list, enquiry form, active-nav marking
+  app.js           Hand-authored project data, hash routing, drawing viewer
+  pages.js         Hand-authored archive list, enquiry form, active-nav marking
   style.css        Global styles
   pages.css        Interior-page styles
   assets/          Photography, logo, credits
@@ -97,7 +97,7 @@ contains an ad-hoc hex value — every colour resolves through a token.
 | `--paper` | `#f0f0e9` | Light section background |
 | `--sheet` | `#e8eadd` | Drawing-sheet paper (matches the generated SVG) |
 | `--gold` | `#c8a76a` | **Accent on dark surfaces** |
-| `--gold-deep` | `#7d6134` | **Accent on light surfaces** (4.2:1 on paper) |
+| `--gold-deep` | `#745a30` | **Accent on light surfaces** (at least 4.5:1 on paper) |
 | `--gold-hover` | `#b3924f` | Solid-button hover |
 | `--gold-soft` | `#f5efe0` | Selected/highlighted tint on paper |
 | `--muted` | `#a5a89d` | Secondary text on dark |
@@ -148,3 +148,7 @@ https://archcell-atelier.aunabbas572.chatgpt.site
 
 Update the `origin` constant in `build-pages.mjs` and rebuild before publishing to a
 different domain.
+
+## Website audit
+
+See [audit/AUDIT.md](audit/AUDIT.md) for the September 2026 design and usability findings, screenshot evidence, fixes and remaining launch requirements. Global CSS/JS and the homepage in `dist/` are source files; supporting route HTML is regenerated from `pages/`.
