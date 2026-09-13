@@ -2,86 +2,86 @@
 
 Website for **Archcell**, a Lahore-based architecture and interior design practice.
 
-The site is a hand-built static multi-page site: no framework, no bundler, no runtime
-dependencies. `dist/` is the deployable output and `pages/` holds the source fragments.
+Built with **Astro** as a fully static site: pages render at build time (project pages are
+server-rendered from data), and a small amount of vanilla JavaScript enhances the
+interactive pieces (menu, catalogue viewer, enquiry form).
 
 > **Design preview.** Projects, drawings and photography are illustrative placeholders.
 > The drawings are diagrams, not construction documents.
 
+> **Migration in progress.** See [MIGRATION-PLAN.md](MIGRATION-PLAN.md): content is moving
+> into Sanity (studio embedded at `/admin`) and the site deploys to Cloudflare.
+
 ## Structure
 
 ```
-build-pages.mjs    Page generator — injects shared header/footer, writes dist routes
-pages/             Source fragments, one per supporting route
-  studio.html
-  services.html
-  process.html
-  projects.html
-  drawings.html
-  contact.html
-  privacy.html
-  404.html
-dist/              Deployable output (route HTML is generated)
-  index.html       Homepage (hand-authored, also the template the generator reads)
-  <route>/index.html
-  404.html
-  app.js           Hand-authored project data, hash routing, drawing viewer
-  pages.js         Hand-authored archive list, enquiry form, active-nav marking
-  style.css        Global styles
-  pages.css        Interior-page styles
-  assets/          Photography, logo, credits
-  .openai/hosting.json   Declares `dist` as the static directory
+src/
+  layouts/BaseLayout.astro     Document shell: head, canonical, header, footer, dialogs
+  components/
+    SiteHeader.astro           Brand, main nav, mobile menu
+    SiteFooter.astro           Footer navigation and fine print
+    ProjectCard.astro          Portfolio card (home + collection)
+    ProjectDetail.astro        Full project article: story + drawing catalogue
+    DrawingDialog.astro        Drawing viewer shell (viewer.js fills it)
+    CreditsDialog.astro        Photography credits dialog
+  pages/
+    index.astro                Homepage
+    studio|services|process|drawings|contact|privacy.astro
+    404.astro
+    projects/index.astro       The project collection
+    projects/[slug]/index.astro      Project story
+    projects/[slug]/drawings.astro   Drawing catalogue (deep-links to the grid)
+  lib/
+    data.js                    Projects, drawings, credits (Sanity replaces this)
+    drawings.js                Build-time SVG generator for the 18 sheets
+    nav.js                     Current-section helper for navigation
+  scripts/
+    site.js                    Menu, reveals, dialogs, transition, parallax
+    viewer.js                  Drawing viewer: open, zoom, next/prev, download
+    filters.js                 Portfolio + catalogue filters
+    contact.js                 Demo enquiry form state machine
+  styles/
+    global.css                 Global chrome + design tokens
+    interior.css               Interior-page styles
+public/assets/                 Photography and logo (served at /assets/…)
 ```
 
-## Build
-
-`dist/index.html` is the homepage **and** the template the generator reads. The generator
-takes the homepage, swaps in the shared header/footer, and replaces `<main>` with each
-fragment from `pages/` to produce the eight routes.
+## Commands
 
 ```bash
-node build-pages.mjs
+npm install        # once
+npm run dev        # dev server at http://localhost:4321
+npm run build      # static build to dist/
+npm run preview    # serve the built dist/
 ```
-
-Expected output:
-
-```
-Updated homepage and generated 8 complete supporting pages.
-```
-
-The script is idempotent — running it repeatedly produces the same result.
 
 ## Preview locally
 
-The HTML uses root-absolute paths (`/style.css`, `/assets/...`), so it must be served over
-HTTP. Opening `dist/index.html` via `file://` will load unstyled.
-
-```bash
-python3 -m http.server 5500 --bind 127.0.0.1 --directory dist
-```
-
-Then open <http://127.0.0.1:5500/>.
+The built site uses root-absolute paths (`/assets/...`), so it must be served over HTTP.
+Opening `dist/index.html` via `file://` will load unstyled. `npm run preview` (or any static
+server pointed at `dist/`) works.
 
 ## Routes
 
 | Route | Page |
 | --- | --- |
 | `/` | Homepage |
-| `/projects/` | Selected work — also hosts the `#project/<id>` detail views |
+| `/projects/` | The project collection (filters) |
+| `/projects/<slug>/` | Project story page |
+| `/projects/<slug>/drawings/` | Drawing catalogue for that project |
 | `/studio/` | The Studio |
 | `/services/` | Services |
 | `/process/` | Our Process |
-| `/drawings/` | The Drawing Room |
+| `/drawings/` | The Drawing Room (archive) |
 | `/contact/` | Start Your Project |
 | `/privacy/` | About This Preview |
 | `/404.html` | Not found |
+| `/admin` | *(coming in Phase 2)* embedded Sanity Studio |
 
-### Hash routes
+### Legacy hash links
 
-Project detail views are client-side routes rendered into `#project-view`:
-
-- `#project/<id>` — project story (`/projects/#project/courtyard-house`)
-- `#project/<id>/drawings` — its drawing catalogue (`/projects/#project/courtyard-house/drawings`)
+Old `#project/<id>` links (shared or bookmarked) redirect automatically to the new URLs;
+a small inline script in `BaseLayout.astro` handles this.
 
 ## Design system
 
@@ -137,18 +137,14 @@ studio story all sit on `--paper`.
 - `style.css` owns global chrome (header, footer, mobile nav). `pages.css` styles
   interior-page content and never re-declares those global components.
 
-## Note on canonical URLs
+## Canonical URLs
 
-
-`build-pages.mjs` writes a canonical tag pointing at the original host:
-
-```
-https://archcell-atelier.aunabbas572.chatgpt.site
-```
-
-Update the `origin` constant in `build-pages.mjs` and rebuild before publishing to a
-different domain.
+Canonical tags are derived from `site` in `astro.config.mjs`, which reads the `SITE_URL`
+environment variable (falling back to the original preview host). Set `SITE_URL` in the
+build environment before publishing to a different domain.
 
 ## Website audit
 
-See [audit/AUDIT.md](audit/AUDIT.md) for the September 2026 design and usability findings, screenshot evidence, fixes and remaining launch requirements. Global CSS/JS and the homepage in `dist/` are source files; supporting route HTML is regenerated from `pages/`.
+See [audit/AUDIT.md](audit/AUDIT.md) for the September 2026 design and usability findings,
+screenshot evidence, fixes and remaining launch requirements. The audit's fixes are
+included in this codebase; the Astro port targets the audit-fixed design.
