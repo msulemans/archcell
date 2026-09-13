@@ -18,8 +18,8 @@ const {
 // Canonical URL: matches the legacy output (directory pages end in "/",
 // the 404 page is 404.html).
 let canonicalPath = Astro.url.pathname;
-if (canonicalPath === '/404') canonicalPath = '/404.html';
-else if (!canonicalPath.endsWith('/') && !canonicalPath.endsWith('.html')) canonicalPath += '/';
+if (canonicalPath === '/404' || canonicalPath === '/404/') canonicalPath = '/404.html';
+else if (!canonicalPath.endsWith('/')) canonicalPath += '/';
 const canonical = new URL(canonicalPath, Astro.site);
 
 const classes = [interior ? 'interior-page' : '', bodyClass].filter(Boolean).join(' ');
