@@ -67,6 +67,42 @@ is not configured (or the dataset is empty/unreachable), so builds never break.
   documents (idempotent). It uses `SANITY_API_WRITE_TOKEN` if present, otherwise the token
   from `npx sanity login` (`~/.config/sanity/config.json`). Tokens never live in the repo.
 
+### Publishing changes
+
+Editing or uploading in the Studio does **not** change the live site on its own: pages are
+static and read the dataset at build time. Press **Publish** (drafts are invisible — the
+client uses `perspective: 'published'`), then the site must rebuild and deploy.
+
+Without the two steps below, publishing leaves the live site frozen at its last deploy. A
+one-off refresh is `npm run deploy` (build + `wrangler deploy`, needs a logged-in Wrangler).
+
+**1. Let GitHub Actions deploy** — add the repository secret
+`CLOUDFLARE_API_TOKEN` (Cloudflare dashboard → My Profile → API Tokens → *Edit Cloudflare
+Workers* template). Without it `.github/workflows/deploy.yml` skips every run.
+
+```bash
+gh secret set CLOUDFLARE_API_TOKEN   # paste the token when prompted
+```
+
+**2. Rebuild when content is published** — Sanity dashboard → project `p8jvt4z4` →
+API → Webhooks → Create webhook:
+
+| Setting | Value |
+| --- | --- |
+| Name | `Rebuild site` |
+| URL | `https://api.github.com/repos/msulemans/archcell/dispatches` |
+| HTTP method | `POST` |
+| HTTP headers | `Authorization: Bearer <GitHub PAT with repo scope>` and `Accept: application/vnd.github+json` |
+| Body | `{"event_type": "sanity-publish"}` |
+| Trigger on | Create, Update, Delete |
+| Filter | `_type in ["project", "projectType", "discipline", "drawing", "credit", "faq", "siteSettings", "homePage"]` |
+| API version | `v2021-03-25` (or later) |
+
+The `sanity-publish` event matches the `repository_dispatch` trigger in
+`.github/workflows/deploy.yml`. A publish then rebuilds and deploys in about 1–2 minutes.
+Large uploads (tens of MB) should be compressed first; the CDN resizes but the build and
+Studio upload both slow down.
+
 ## Commands
 
 ```bash

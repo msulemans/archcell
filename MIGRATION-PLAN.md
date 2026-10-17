@@ -269,6 +269,7 @@ by the pages that need them:
 - [x] GitHub Actions deploy workflow (`.github/workflows/deploy.yml`): runs on push to main, Sanity dispatch (`sanity-publish`) or manual trigger; skips cleanly until the token exists
 - [ ] Add the `CLOUDFLARE_API_TOKEN` repository secret → deploys and the manual “Run workflow” button go live
 - [ ] Create the Sanity webhook → GitHub `repository_dispatch` (`sanity-publish`) → publishing rebuilds the site automatically
+  (exact dashboard settings in [README → Publishing changes](README.md#publishing-changes))
 - [ ] Optional `@astrojs/sitemap` + `robots.txt`
 
 ### Phase 4 — “Everything editable” coverage — **in progress**

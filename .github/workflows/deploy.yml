@@ -52,6 +52,7 @@ jobs:
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: 03d0cfc348ac583030aa12ac1f6a8d2a
 
       - name: Skipped (no credentials)
         if: steps.check.outputs.configured != 'true'
