@@ -95,11 +95,13 @@ API → Webhooks → Create webhook:
 | HTTP headers | `Authorization: Bearer <GitHub PAT with repo scope>` and `Accept: application/vnd.github+json` |
 | Body | `{"event_type": "sanity-publish"}` |
 | Trigger on | Create, Update, Delete |
-| Filter | `_type in ["project", "projectType", "discipline", "drawing", "credit", "faq", "siteSettings", "homePage"]` |
+| Filter | `!(_id in path("drafts.**")) && _type in ["project", "projectType", "discipline", "drawing", "credit", "faq", "siteSettings", "homePage"]` |
 | API version | `v2021-03-25` (or later) |
 
 The `sanity-publish` event matches the `repository_dispatch` trigger in
 `.github/workflows/deploy.yml`. A publish then rebuilds and deploys in about 1–2 minutes.
+The `drafts.**` guard matters: the Studio autosaves drafts continuously, so without it every
+keystroke would queue a rebuild — only publishing produces a non-draft event.
 Large uploads (tens of MB) should be compressed first; the CDN resizes but the build and
 Studio upload both slow down.
 
