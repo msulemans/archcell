@@ -89,19 +89,27 @@ API → Webhooks → Create webhook:
 
 | Setting | Value |
 | --- | --- |
-| Name | `Rebuild site` |
+| Name | `Rebuild site on publish` |
 | URL | `https://api.github.com/repos/msulemans/archcell/dispatches` |
+| Dataset | `production` |
 | HTTP method | `POST` |
-| HTTP headers | `Authorization: Bearer <GitHub PAT with repo scope>` and `Accept: application/vnd.github+json` |
-| Body | `{"event_type": "sanity-publish"}` |
+| HTTP headers | `Authorization` = `Bearer <GitHub PAT>`<br>`Accept` = `application/vnd.github+json` |
+| **Payload / projection** | `{"event_type": "sanity-publish"}` — **required** |
 | Trigger on | Create, Update, Delete |
 | Filter | `!(_id in path("drafts.**")) && _type in ["project", "projectType", "discipline", "drawing", "credit", "faq", "siteSettings", "homePage"]` |
 | API version | `v2021-03-25` (or later) |
 
-The `sanity-publish` event matches the `repository_dispatch` trigger in
-`.github/workflows/deploy.yml`. A publish then rebuilds and deploys in about 1–2 minutes.
-The `drafts.**` guard matters: the Studio autosaves drafts continuously, so without it every
-keystroke would queue a rebuild — only publishing produces a non-draft event.
+Use a **fine-grained** PAT scoped to `msulemans/archcell` with *Contents: Read and write*
+(`repository_dispatch` sits under Contents); a classic token needs `repo` scope.
+
+The payload projection is what makes this work: without it Sanity posts the whole document,
+GitHub rejects the request with `422 … "event_type" wasn't supplied`, and no rebuild starts.
+The event name must match the `repository_dispatch` trigger in
+`.github/workflows/deploy.yml`.
+
+Draft saves do not trigger document webhooks by default, so editing in the Studio stays
+quiet; the `drafts.**` guard is a belt-and-braces filter in case draft events are ever
+enabled. A publish then rebuilds and deploys in about 1-2 minutes.
 Large uploads (tens of MB) should be compressed first; the CDN resizes but the build and
 Studio upload both slow down.
 
